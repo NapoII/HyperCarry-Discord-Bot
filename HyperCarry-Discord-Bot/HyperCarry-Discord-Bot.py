@@ -110,7 +110,7 @@ class MyBot(commands.Bot):
                 write_config(config_dir, "Channel","icarry_cmd_id", icarry_cmd_id)
                 #write_config(config_dir, "Channel", "icarry_cmd_id_name", icarry_cmd_id_name)
 
-                embed = discord.Embed(title="#rust-info", color=0x8080ff)
+                embed = discord.Embed(title="Attention!", color=0x8080ff)
                 embed.set_author(name=f"@{guild.name}",
                                 icon_url=f"https://i.imgur.com/OfrhTsM.png")
                 embed.set_thumbnail(url="https://i.imgur.com/s5ZWwpZ.png")
@@ -126,7 +126,7 @@ class MyBot(commands.Bot):
                 #write_config(config_dir, "Channel", "delt_messages_channel_name", delt_messages_name)
                 print(f"The channel {delt_messages_name} was created.")
 
-                embed = discord.Embed(title="#rust-info", color=0x8080ff)
+                embed = discord.Embed(title="🚮 delt-messages", color=0x8080ff)
                 embed.set_author(name=f"@{guild.name}",icon_url=f"https://i.imgur.com/OfrhTsM.png")
                 embed.set_thumbnail(url="https://i.imgur.com/6I3i9X7.png")
                 embed_text = f"In the first channel, 🤖 the bot will log 📝 all deleted messages to ensure that nothing is lost.📜🔍"
@@ -145,9 +145,7 @@ class MyBot(commands.Bot):
         text = f"\n\nThe Bot: [ {self.user} | ID:{self.user.id} ] is connected to [{guild.name}] id: [{guild.id}]\nActivity_text:[{activity_text}]\n\n📶 Bot is Online and Rdy to Run... 📶 \n"
 
         admin_channel_id = int(read_config(config_dir, "channel", "admin_channel_id"))
-        print(f"admin_channel_id>>>>>>>>>>>>>>>>>> {admin_channel_id}")
         channel = self.get_channel(admin_channel_id)
-        print(f"channel>>>>>>>>>>>>>>>>>> {channel}")
         print(str(text))
 
         embed = discord.Embed(title=py_name, color=0xff80ff)
