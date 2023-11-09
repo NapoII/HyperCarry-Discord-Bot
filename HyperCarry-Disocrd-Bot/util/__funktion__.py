@@ -22,6 +22,8 @@ import shutil
 import time
 import sys
 
+import discord
+
 def new_path(base_path, *additional_paths):
     """
     Combines paths based on a base and optional additional paths.
@@ -130,10 +132,12 @@ Example Usage:
         config.add_section(section)
     except:
         pass
-    config.set(section, Key,option) #Updating existing entry 
-    with open(config_dir, 'w') as configfile:
+    option = str(option)
+    config.set(section, Key, option)  # Updating existing entry
+    with open(config_dir, 'w', encoding='utf-8') as configfile:
         config.write(configfile)
-    print (f"\nChange settings -> {config_dir}\n[{section}]\n{Key}) = {option}\n")
+    print(
+        f"\nChange settings -> {config_dir}\n[{section}]\n{Key}) = {option}\n")
 
 
 
@@ -321,3 +325,22 @@ else:
 
 ################################################################################################################################
 #def spez.
+
+def Discord_Activity(Text):
+    """
+    Creates a Discord Activity object with the specified text and type.
+
+    Args:
+        Text (str): The text to display as the activity.
+
+    Returns:
+        - Activity (discord.Activity): A Discord Activity object with the specified text and type.
+
+    Example Usage:
+        >>> import discord
+        >>> activity = Discord_Activity("Watching a movie")
+        >>> client = discord.Client(activity=activity)
+    """
+    #Activity = discord.Client(activity=discord.Game(name='my game'))
+    Activity = discord.Activity(name=Text, type=discord.ActivityType.watching)
+    return Activity

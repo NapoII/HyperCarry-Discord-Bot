@@ -1,8 +1,8 @@
-[![github/NapoII](https://raw.githubusercontent.com/NapoII/HyperCarry-Disocrd-Bot/main/README_img/Readme_top.png)](https://github.com/NapoII)
+[![github/NapoII](https://raw.githubusercontent.com/NapoII/HyperCarry-Discord-Bot/main/README_img/Readme_top.png)](https://github.com/NapoII)
 
-# HyperCarry-Disocrd-Bot
+# HyperCarry-Discord-Bot
 
-[![downloads/total](https://img.shields.io/github/downloads/NapoII/HyperCarry-Disocrd-Bot/total)](https://github.com/NapoII/HyperCarry-Disocrd-Bot/archive/refs/heads/main.zip) [![github/repo-size](https://img.shields.io/github/repo-size/NapoII/HyperCarry-Disocrd-Bot)](https://github.com/NapoII/HyperCarry-Disocrd-Bot/archive/refs/heads/main.zip) [![github/license](https://img.shields.io/github/license/NapoII/HyperCarry-Disocrd-Bot)](https://github.com/NapoII/HyperCarry-Disocrd-Bot/blob/main/LICENSE) [![github/last-commit](https://img.shields.io/github/downloads/NapoII/HyperCarry-Disocrd-Bot/total)](https://img.shields.io/github/issues/NapoII/HyperCarry-Disocrd-Bot?style=plastic) [![github/issues_open](https://img.shields.io/github/issues/NapoII/HyperCarry-Disocrd-Bot?style=plastic)](https://img.shields.io/github/issues-raw/NapoII/HyperCarry-Disocrd-Bot) [![github/stars](https://img.shields.io/github/stars/NapoII/HyperCarry-Disocrd-Bot?style=social)](https://github.com/NapoII/HyperCarry-Disocrd-Bot/stargazers) [![discord](https://img.shields.io/discord/190307701169979393)](https://discord.gg/knTKtKVfnr)
+[![downloads/total](https://img.shields.io/github/downloads/NapoII/HyperCarry-Discord-Bot/total)](https://github.com/NapoII/HyperCarry-Discord-Bot/archive/refs/heads/main.zip) [![github/repo-size](https://img.shields.io/github/repo-size/NapoII/HyperCarry-Discord-Bot)](https://github.com/NapoII/HyperCarry-Discord-Bot/archive/refs/heads/main.zip) [![github/license](https://img.shields.io/github/license/NapoII/HyperCarry-Discord-Bot)](https://github.com/NapoII/HyperCarry-Discord-Bot/blob/main/LICENSE) [![github/last-commit](https://img.shields.io/github/downloads/NapoII/HyperCarry-Discord-Bot/total)](https://img.shields.io/github/issues/NapoII/HyperCarry-Discord-Bot?style=plastic) [![github/issues_open](https://img.shields.io/github/issues/NapoII/HyperCarry-Discord-Bot?style=plastic)](https://img.shields.io/github/issues-raw/NapoII/HyperCarry-Discord-Bot) [![github/stars](https://img.shields.io/github/stars/NapoII/HyperCarry-Discord-Bot?style=social)](https://github.com/NapoII/HyperCarry-Discord-Bot/stargazers) [![discord](https://img.shields.io/discord/190307701169979393)](https://discord.gg/knTKtKVfnr)
 
 Coming soon...
 ## 📝 Table of Contents
@@ -15,15 +15,15 @@ coming soon...
 
 ## 💻 Install <a name = "usage"></a>
 ```cmd
-git clone https://github.com/NapoII/HyperCarry-Disocrd-Bot
+git clone https://github.com/NapoII/HyperCarry-Discord-Bot
 pip install -r requirements.txt
 ```
 ## 💭 How it works <a name = "Use"></a>
 
-start HyperCarry-Disocrd-Bot.py directly from the folder or run in cmd:
+start HyperCarry-Discord-Bot.py directly from the folder or run in cmd:
 ```cmd
-cd <local path of HyperCarry-Disocrd-Bot>
-python HyperCarry-Disocrd-Bot.py
+cd <local path of HyperCarry-Discord-Bot>
+python HyperCarry-Discord-Bot.py
 ```
 
 ## 📚 Lizenz <a name = "Lizenz"></a>
