@@ -14,6 +14,8 @@ import discord
 from discord.ext import commands, tasks
 from platform import python_version
 
+
+
 from util.__funktion__ import *
 
 
@@ -28,25 +30,25 @@ config_dir = file_path + os.path.sep + "cfg"+ os.path.sep +"config.ini"
 # Load Config
 token_config_dir = os.path.normpath(os.path.join(file_path, "cfg", "token.ini"))
 
-
 # Client
 while True:
     try:
         Discord_token = read_config(token_config_dir, "discord", "token")
         Application_ID = read_config(token_config_dir, "discord", "application_id")
+
         guild_id = int(read_config(config_dir, "client", "guild_id"))
         guild = discord.Object(id=guild_id)
         praefix = read_config(config_dir, "client", "praefix")
         activity_text = (read_config(config_dir, "client", "activity"))
         activity = Discord_Activity(activity_text)
+
         break
     except:
         print(f"Fill in the empty fields in both config files! \n token_config -> [{token_config_dir}]\nconfig_dir -> [{config_dir}]")
 
-# Channel
-admin_channel_id = int(read_config(config_dir, "channel", "admin_channel_id"))
+# channel
+icarry_cmd_id = int(read_config(config_dir, "channel", "icarry_cmd_id"))
 delt_messages_channel_id = int(read_config(config_dir, "channel", "delt_messages_channel_id"))
-
 
 
 ################################################################################################################################
@@ -57,12 +59,13 @@ class MyBot(commands.Bot):
             command_prefix=praefix,
             intents=discord.Intents.all(),
             application_id=Application_ID,
-            activity=activity)
+            activity=activity
+        )
 
-        # "Work_Folder.Rust.test",
-        #"discord_cogs.Rust.player_watch",
+        # "Work_Folder.Rust.test"
+        
         self.initial_extensions = [
-            
+            "discord_cogs.channel_hopper.channel_hopper",
         ]
 
     async def setup_hook(self):
@@ -107,8 +110,8 @@ class MyBot(commands.Bot):
 
                 icarry_cmd_id_name = icarry_cmd.name
                 icarry_cmd_id = icarry_cmd.id
-                write_config(config_dir, "Channel","icarry_cmd_id", icarry_cmd_id)
-                #write_config(config_dir, "Channel", "icarry_cmd_id_name", icarry_cmd_id_name)
+                write_config(config_dir, "channel","icarry_cmd_id", icarry_cmd_id)
+                #write_config(config_dir, "channel", "icarry_cmd_id_name", icarry_cmd_id_name)
 
                 embed = discord.Embed(title="Attention!", color=0x8080ff)
                 embed.set_author(name=f"@{guild.name}",
@@ -122,8 +125,8 @@ class MyBot(commands.Bot):
                 print(f"The channel {delt_messages.name} was created.")
                 delt_messages_channel_id = delt_messages.id
                 delt_messages_name = delt_messages.name
-                write_config(config_dir, "Channel","delt_messages_channel_id", delt_messages_channel_id)
-                #write_config(config_dir, "Channel", "delt_messages_channel_name", delt_messages_name)
+                write_config(config_dir, "channel","delt_messages_channel_id", delt_messages_channel_id)
+                #write_config(config_dir, "channel", "delt_messages_channel_name", delt_messages_name)
                 print(f"The channel {delt_messages_name} was created.")
 
                 embed = discord.Embed(title="🚮 delt-messages", color=0x8080ff)
@@ -133,6 +136,35 @@ class MyBot(commands.Bot):
                 embed.add_field(name="Attention!",value=embed_text, inline=True)
                 await delt_messages.send(embed=embed)
 
+
+                category_name = "--🔒🔊 - Private Voice - 🔊🔒--"
+                category_private_voice = discord.utils.get(guild.categories, name=category_name)
+
+                if category_private_voice is not None:
+                    print(f"The category {category_private_voice.name} already exists.")
+
+                else:
+                    print(f"The category {category_name} does not yet exist and will now be created")
+                    overwrites = {
+                        guild.default_role: discord.PermissionOverwrite(read_messages=True),  # Everyone can view and join the channel
+                        guild.me: discord.PermissionOverwrite(send_messages=True, read_messages=True)  # The bot can send messages, others can only view
+                    }
+                
+                    # Creates a new category
+                    category_private_voice = await guild.create_category(category_name, overwrites=overwrites)
+                    print(f"The category {category_name} was created.")
+                    category_private_voice_name = category_private_voice.name
+                    category_private_voice_id = category_private_voice.id
+                    write_config(config_dir, "channel","category_private_voice_id", category_private_voice_id)
+
+                    create_channel = await guild.create_voice_channel("➕-create-channel-➕", category=category_private_voice)
+                    print(f"The channel {create_channel.name} was created.")
+                    write_config(config_dir, "channel", "create_channel_id", create_channel.id)
+
+                    embed = discord.Embed(title="Space holder for Hopper commands", description="Here come those hopper commands strengthen ala help nor placeholder", color=0x00ff00)
+
+                    # Hier wird angenommen, dass 'create_channel' die Referenz auf den erstellten Voice-Channel ist.
+                    await create_channel.send(embed=embed)
 
                 embed = discord.Embed(
                     title="🍾Nice, the bot has created the required channels for the HyperCarry-DC🍾", color=0xff8080)
@@ -144,8 +176,8 @@ class MyBot(commands.Bot):
 
         text = f"\n\nThe Bot: [ {self.user} | ID:{self.user.id} ] is connected to [{guild.name}] id: [{guild.id}]\nActivity_text:[{activity_text}]\n\n📶 Bot is Online and Rdy to Run... 📶 \n"
 
-        admin_channel_id = int(read_config(config_dir, "channel", "admin_channel_id"))
-        channel = self.get_channel(admin_channel_id)
+        icarry_cmd_id = int(read_config(config_dir, "channel", "icarry_cmd_id"))
+        channel = self.get_channel(icarry_cmd_id)
         print(str(text))
 
         embed = discord.Embed(title=py_name, color=0xff80ff)
@@ -192,14 +224,8 @@ class MyBot(commands.Bot):
             if message.author == bot.user:
                 return
 
-            print(str(user) + ": (#" + str(channel_m)+") say: " + content_m)
-            rust_info_channel_id = int(read_config(
-                config_dir, "Channel", "rust_info_channel_id"))
-            player_observation_channel_id = int(read_config(
-                config_dir, "Channel", "player_observation_channel_id"))
-            print(
-                f"channel_m_id= {channel_m_id} == icarry_cmd_id_name= {rust_info_channel_id}")
-            if channel_m_id == rust_info_channel_id or channel_m_id == player_observation_channel_id:
+            channel_msg_block_list = []
+            if channel_m_id in channel_msg_block_list:
 
                 await message.delete()
                 print(f"Message was deleted by the bot:{channel_m} {message}")
@@ -224,10 +250,10 @@ class MyBot(commands.Bot):
             embed.set_thumbnail(url="https://i.imgur.com/PdLm65I.png")
 
             embed.add_field(name=message_author,
-                            value="Channel: "+message_channel, inline=True)
+                            value="channel: "+message_channel, inline=True)
             embed.set_footer(text=message_content)
             delt_messages_channel_id = int(read_config(
-                config_dir, "Channel", "delt_messages_channel_id"))
+                config_dir, "channel", "delt_messages_channel_id"))
             Adelt_messages_name_discord = bot.get_channel(
                 delt_messages_channel_id)
             await Adelt_messages_name_discord.send(embed=embed)

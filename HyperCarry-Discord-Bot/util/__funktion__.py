@@ -14,8 +14,7 @@ Here is the code:
 
 """
 
-import logNow
-from logNow import log
+import json
 import os
 from configparser import ConfigParser
 import shutil
@@ -76,7 +75,7 @@ Example Usage:
         config.read(config_dir)
         load_config = (config[section][option])
         config_float = float(load_config)
-        log(f"Config loaded: [ ({option})  = ({config_float}) ] conv to float", "g")
+        print(f"Config loaded: [ ({option})  = ({config_float}) ] conv to float", "g")
 
         return config_int
     if arg == "int":
@@ -84,7 +83,7 @@ Example Usage:
         config.read(config_dir)
         load_config = (config[section][option])
         config_int = int(load_config)
-        log(f"Config loaded: [ ({option})  = ({config_tuple}) ] conv to int", "g")
+        print(f"Config loaded: [ ({option})  = ({config_tuple}) ] conv to int", "g")
 
         return config_int
     
@@ -93,7 +92,7 @@ Example Usage:
         config.read(config_dir)
         load_config = (config[section][option])
         config_tuple = tuple(map(int, load_config.split(",")))
-        log(f"Config loaded: [ ({option})  = ({config_tuple}) ] conv to tuple", "g")
+        print(f"Config loaded: [ ({option})  = ({config_tuple}) ] conv to tuple", "g")
 
         return config_tuple
     
@@ -102,7 +101,7 @@ Example Usage:
         config.read(config_dir)
         load_config = (config[section][option])
 
-        log(f"Config loaded: [ ({option})  = ({load_config}) ]", "g")
+        print(f"Config loaded: [ ({option})  = ({load_config}) ]", "g")
 
         return load_config
 
@@ -171,7 +170,7 @@ def Folder_gen(Folder_Name, Folder_dir):
         print("  ->   " + str(full_path))
     else:                                               # Creates folder if not available
         os.makedirs(full_path)
-        log(f"The folder [{folder}] was created in the directory:\n  ->   {full_path}", "b")
+        print(f"The folder [{folder}] was created in the directory:\n  ->   {full_path}", "b")
         print("\n")
     return(os.path.normpath(full_path))
 
@@ -206,7 +205,7 @@ def Create_File(File_name, save_path, Inhalt):
         # File is filled with input
         file1.write(f"{Inhalt}")
         file1.close()
-        log(f"\nfile [{File_name}] is created...with conetnt:\{Inhalt}","b")
+        print(f"\nfile [{File_name}] is created...with conetnt:\{Inhalt}","b")
         return complete_Path_Text
 
 
@@ -254,10 +253,10 @@ def copy_image(source_file, dest_file) -> None:
     try:
         shutil.copy(source_file, dest_file)
         file = dest_file
-        log(f"Image [{file}] successfully copied!", "b")
+        print(f"Image [{file}] successfully copied!", "b")
         return file
     except IOError as e:
-        log(f"Error when copying the file: {e}", "r")
+        print(f"Error when copying the file: {e}", "r")
 
 
 def File_name_with_time(FileName):
@@ -318,7 +317,7 @@ def cheack_config(default_long_Str):
     return config_path
 
 if __name__ == "__funktion__":
-    log("__function should not be executed when the file is imported as a module.\nThis was not the case!", "r")
+    print("__function should not be executed when the file is imported as a module.\nThis was not the case!", "r")
 else:
     cheack_config("""[Test]
     abc = 123""")
@@ -344,3 +343,197 @@ def Discord_Activity(Text):
     #Activity = discord.Client(activity=discord.Game(name='my game'))
     Activity = discord.Activity(name=Text, type=discord.ActivityType.watching)
     return Activity
+
+
+def add_new_channel_data(user_name, user_id, channel_id, json_path):
+    # Read in the existing JSON file
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    # Add the new data
+    new_channel_data = {
+        "user_id": {
+            "owner_name":user_name,
+            "channel_id": channel_id,
+            "admin": [user_id],
+            "limit": "0",
+            "banned": "",
+            "hide": False,
+            "stay": False
+        }
+    }
+
+    # Add the new data to the existing data object
+    data[user_id] = new_channel_data["user_id"]
+
+    # Write the updated data back to the JSON file
+    with open(json_path, 'w') as file:
+        json.dump(data, file, indent=2)
+
+
+def is_user_in(user_id, json_path):
+    if user_id == int:
+        user_id = str(user_id)
+    # Read in the JSON file
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+    return str(user_id) in data.keys()
+
+
+def is_channel_id_in(channel_id, json_path):
+    if channel_id == str:
+        channel_id = int(channel_id)
+    # Read in the JSON file
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    # Check whether the channel_id is present
+    for user_id, user_data in data.items():
+        if "channel_id" in user_data and user_data["channel_id"] == channel_id:
+            return True
+
+    # If the channel_id was not found
+    return False
+
+
+def delete_data_with_channel_id(channel_id, json_path):
+    # Read in the existing JSON file
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    # Check if the channel_id is present
+    for user_id, user_data in list(data.items()):
+        if "channel_id" in user_data and user_data["channel_id"] == channel_id:
+            # Delete the parent data object
+            del data[user_id]
+
+    # Write the updated data back to the JSON file
+    with open(json_path, 'w') as file:
+        json.dump(data, file, indent=2)
+
+
+def get_channel_id_from(owner_id, json_path):
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    for channel_id, channel_data in data.items():
+        if channel_id == str(owner_id):
+            return channel_data.get("channel_id")
+    return None  # If the owner_id is not found
+
+
+def is_he_channel_admin(user_id, channel_id, json_path):
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    for key, value in data.items():
+        if "channel_id" in value and value["channel_id"] == channel_id:
+            if "admin" in value and user_id in value["admin"]:
+                return True
+
+    return False
+
+
+def get_channel_id_for_user_in_admin(user_id, json_path):
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    for key, value in data.items():
+        if "admin" in value:
+            if user_id == value["admin"] or (isinstance(value["admin"], list) and user_id in value["admin"]):
+                return value["channel_id"]
+
+    return False
+
+
+def get_list_for_all_admin_server_from_user(user_id, json_path):
+    channel_ids = []
+
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    for key, value in data.items():
+        if "admin" in value:
+            if user_id == value["admin"] or (isinstance(value["admin"], list) and user_id in value["admin"]):
+                channel_ids.append(value["channel_id"])
+
+    return channel_ids
+
+
+def get_item_from_channel(item, target_channel_id, json_input):
+    # If json_input is a file path, read the JSON file
+    if isinstance(json_input, str):
+        with open(json_input, 'r') as file:
+            data = json.load(file)
+    # If json_input is already a JSON object, use it directly
+    elif isinstance(json_input, dict):
+        data = json_input
+    else:
+        raise ValueError("Invalid json_input type. Please provide either a file path (str) or a JSON object (dict).")
+
+    # Search the data structure for the subcategory with the target channel ID
+    for main_key, subcategory_data in data.items():
+        if "channel_id" in subcategory_data and subcategory_data["channel_id"] == target_channel_id:
+            value = data.get(main_key, {}).get(f"{item}")
+            return value
+    
+    return None
+
+
+def switch_stay_status(target_channel_id, json_path):
+    # Read in the JSON file
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    # Search the data structure for the subcategory with the target channel ID
+    for main_key, subcategory_data in data.items():
+        if "channel_id" in subcategory_data and subcategory_data["channel_id"] == target_channel_id:
+            # Toggle the "stay" value
+            subcategory_data["stay"] = not subcategory_data.get("stay", True)
+
+            # Write the updated data back to the JSON file
+            with open(json_path, 'w') as write_file:
+                json.dump(data, write_file, indent=2)
+
+            # Return the updated "stay" value
+            return subcategory_data["stay"]
+
+    # Return None if the target channel ID is not found
+    return None
+
+
+def get_admin_list(channel_id, json_path):
+    try:
+        with open(json_path, 'r') as file:
+            data = json.load(file)
+
+        for key, value in data.items():
+            if "channel_id" in value and value["channel_id"] == channel_id:
+                return value.get("admin", [])
+        
+        print(f"Channel mit ID {channel_id} nicht gefunden.")
+        return []
+
+    except FileNotFoundError:
+        print(f"Datei {json_path} nicht gefunden.")
+        return []
+    
+
+def read_json_file(json_path):
+    try:
+        with open(json_path, 'r') as file:
+            return json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        print(f"Fehler beim Laden der JSON-Datei {json_path}.")
+        return None
+
+
+def find_main_key(json_path, target_channel_id):
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    for main_key, channel_data in data.items():
+        if "channel_id" in channel_data and channel_data["channel_id"] == target_channel_id:
+            return main_key
+
+    return None
