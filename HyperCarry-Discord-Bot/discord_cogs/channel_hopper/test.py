@@ -300,5 +300,26 @@ def find_main_key(json_path, target_channel_id):
     return None
 
 
-print (find_main_key(json_path, 1172960279525609512))
+#print (find_main_key(json_path, 1172960279525609512))
 
+
+data= read_json_file(json_path)
+
+def find_main_key(target_channel_id, data_or_path):
+    if isinstance(data_or_path, str):  # If it's a file path, load the data.
+        with open(data_or_path, 'r') as file:
+            data = json.load(file)
+    elif isinstance(data_or_path, dict):  # If it's already loaded data, use it directly.
+        data = data_or_path
+    else:
+        raise ValueError("Invalid type for data_or_path. Expected either a file path (str) or already loaded data (dict).")
+
+    for main_key, channel_data in data.items():
+        if "channel_id" in channel_data and channel_data["channel_id"] == target_channel_id:
+            return main_key
+
+    return None
+
+
+x = find_main_key(1173008981627764821, data)
+print(x)

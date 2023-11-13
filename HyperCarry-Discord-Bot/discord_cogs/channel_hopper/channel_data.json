@@ -1,13 +1,14 @@
 {
-  "314094103459528705": {
-    "owner_name": "rotion",
-    "channel_id": 1172967797823918131,
+  "189025602236448778": {
+    "owner_name": "napo_ii",
+    "channel_id": 1173685743013609622,
+    "channel_msg_id": 1173685744989122560,
     "admin": [
-      314094103459528705
+      189025602236448778
     ],
     "limit": "0",
     "banned": "",
     "hide": false,
-    "stay": true
+    "stay": false
   }
 }

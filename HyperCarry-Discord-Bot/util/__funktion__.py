@@ -75,7 +75,7 @@ Example Usage:
         config.read(config_dir)
         load_config = (config[section][option])
         config_float = float(load_config)
-        print(f"Config loaded: [ ({option})  = ({config_float}) ] conv to float", "g")
+        print(f"Config loaded: [ ({option})  = ({load_config}) ] conv to float", "g")
 
         return config_int
     if arg == "int":
@@ -83,7 +83,7 @@ Example Usage:
         config.read(config_dir)
         load_config = (config[section][option])
         config_int = int(load_config)
-        print(f"Config loaded: [ ({option})  = ({config_tuple}) ] conv to int", "g")
+        print(f"Config loaded: [ ({option})  = ({load_config}) ] conv to int", "g")
 
         return config_int
     
@@ -92,7 +92,7 @@ Example Usage:
         config.read(config_dir)
         load_config = (config[section][option])
         config_tuple = tuple(map(int, load_config.split(",")))
-        print(f"Config loaded: [ ({option})  = ({config_tuple}) ] conv to tuple", "g")
+        print(f"Config loaded: [ ({option})  = ({load_config}) ] conv to tuple", "g")
 
         return config_tuple
     
@@ -355,6 +355,7 @@ def add_new_channel_data(user_name, user_id, channel_id, json_path):
         "user_id": {
             "owner_name":user_name,
             "channel_id": channel_id,
+            "channel_msg_id": "",
             "admin": [user_id],
             "limit": "0",
             "banned": "",
@@ -528,12 +529,40 @@ def read_json_file(json_path):
         return None
 
 
-def find_main_key(json_path, target_channel_id):
-    with open(json_path, 'r') as file:
-        data = json.load(file)
+def find_main_key(target_channel_id, data_or_path):
+    if isinstance(data_or_path, str):  # If it's a file path, load the data.
+        with open(data_or_path, 'r') as file:
+            data = json.load(file)
+    elif isinstance(data_or_path, dict):  # If it's already loaded data, use it directly.
+        data = data_or_path
+    else:
+        raise ValueError("Invalid type for data_or_path. Expected either a file path (str) or already loaded data (dict).")
 
     for main_key, channel_data in data.items():
         if "channel_id" in channel_data and channel_data["channel_id"] == target_channel_id:
             return main_key
 
     return None
+
+
+
+def fill_item_in_channel(channel_id, item, fill, json_path):
+    # Load the JSON from the file
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    # Iterate through the keys of the outer object
+    for key, value in data.items():
+        # Check if the channel_id is present in the inner object
+        if "channel_id" in value and value["channel_id"] == channel_id:
+            # Update the element in the found object
+            value[item] = fill
+
+            # Save the updated data back to the file
+            with open(json_path, 'w') as file:
+                json.dump(data, file, indent=2)
+            print(f"Successfully updated {item} for channel {channel_id}.")
+            return  # Exit the function after the update is done
+
+    # If the function reaches here, the channel was not found
+    print(f"Channel {channel_id} not found.")

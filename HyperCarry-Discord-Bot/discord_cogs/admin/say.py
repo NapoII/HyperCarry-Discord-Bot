@@ -7,6 +7,12 @@ a send ebmbed to channel for the discord admin.
 from discord.app_commands import Choice
 from util.__funktion__ import *
 
+from discord.ext import commands, tasks
+from util.__funktion__ import *
+import random
+import discord
+from discord import app_commands
+from discord import app_commands, ui
 
 # get the path of the current directory
 current_dir = os.path.dirname(os.path.abspath(__file__))

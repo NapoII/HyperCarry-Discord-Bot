@@ -10,6 +10,8 @@ from util.__funktion__ import *
 import random
 import discord
 from discord import app_commands
+from discord import app_commands, ui
+
 
 # get the path of the current directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -17,34 +19,30 @@ bot_path = os.path.abspath(sys.argv[0])
 bot_folder = os.path.dirname(bot_path)
 # construct the path to the config.ini file relative to the current directory
 config_dir = os.path.join(bot_folder, "cfg", "config.ini")
-category_private_voice_id = int(read_config(config_dir, "channel", "category_private_voice_id"))
+category_private_voice_id = read_config(config_dir, "category", "category_private_voice_id", "int")
 json_path = os.path.join(current_dir, "channel_data.json")
 
-vc_user_command_list = f"""
-- The owner can rename the channel with
-`/vc name`
-- The owner can limit the channel with
-`/vc limit x` (0 = infinite, X = number up to 99)
-- The owner can hide the channel from everyone with
-`/vc hide` or show it with `/vc unhide`
-- The owner can mute, kick and ban other members in the channel with
-`/vc kick name`, `/vc ban name`"""
+help_embed = discord.Embed(title="Channel Commands",
+                      description="> Show all voice channel commands\n```/vc_help```\n**Only the owner and the channel administrators have the right to execute the following commands:**\n\n> Rename the Voice Channel\n```/vc_rename {new_channel_name}```\n> Set the maximum number of users.\n```/vc_limit {new_limit}```\n> Switch the status whether the server may be deleted after leaving.\n```/vc_stay```",
+                      colour=0xff8000)
+
+help_embed.set_author(name="/vc_help")
 
 
-guild_id = read_config(config_dir, "client", "guild_id")
+guild_id = read_config(config_dir, "client", "guild_id", "int")
 if guild_id == None:
     guild_id = 1
 guild_id = int(guild_id)
 guild = discord.Object(id=guild_id)
 
 
-create_channel_id =  read_config(config_dir, "channel", "create_channel_id")
+create_channel_id =  read_config(config_dir, "channel", "create_channel_id", "int")
 
 if create_channel_id == None:
     create_channel_id = 1
 create_channel_id = int(create_channel_id)
 
-category_private_voice_id = read_config(config_dir, "channel", "category_private_voice_id")
+category_private_voice_id = read_config(config_dir, "category", "category_private_voice_id")
 if category_private_voice_id == None:
     category_private_voice_id = 1
 category_private_voice_id = int(category_private_voice_id)
@@ -71,13 +69,8 @@ class channelHoper(commands.Cog):
             channel_id = get_channel_id_from(user_id, json_path)
             channel = self.bot.get_channel(channel_id)
             await user.move_to(channel)
-            embed=discord.Embed(title="Only one voice channel per user allowed", description=f"""You already have a voice channel. 
-                                <#{channel_id}>
-                                I switched you to the channel.
-                                you can edit your channel with:
-                                {vc_user_command_list}""", color=0xff0000)
-            embed.set_thumbnail(url="https://i.imgur.com/LFG51bE.png")
-            await user.send(embed=embed)
+
+            await user.send(embed=help_embed)
 
         if is_user_in(user_id, json_path) == False:
         #if user_id not in self.voice_channels.values():
@@ -85,26 +78,62 @@ class channelHoper(commands.Cog):
             # random_pic = random.choice(channel_name_list)
 
             new_channel = await category.create_voice_channel(f"🔊  {user_name}´s VC")
-
             new_channel_id = new_channel.id
 
-
-
             add_new_channel_data(user_name, user_id, new_channel_id, json_path)
+
+            owner_id = find_main_key(new_channel.id, json_path)
+            print(f"interaction_channel.id {new_channel.id}")
+            data = read_json_file(json_path)
+            limit = new_channel.user_limit
+            admin_list = get_item_from_channel("admin", new_channel.id, data)
+            admin_list_len = len(admin_list)
+            owner = await self.bot.fetch_user(owner_id)
+
+            
+            x = -1
+            admin_text = ""
+            while True:
+                x = x + 1
+                if x == admin_list_len:
+                    break
+                admin = admin_list[x]
+                admin_text = admin_text +f"<@{admin}> "
+
+            stay = get_item_from_channel("stay", new_channel.id, data)
+            hide = get_item_from_channel("hide", new_channel.id, data)
+
+
+            embed = discord.Embed(title=f"<#{new_channel.id}>",
+                                description=f"<@{owner.id}>, is the owner of this Voice Channel\nThe following User have admin rights on this channel:\n{admin_text}\n",
+                                colour=0x00b0f4)
+
+            embed.set_author(name="Channel Info")
+
+            embed.add_field(name="Stay mode",
+                            value=stay,
+                            inline=True)
+            embed.add_field(name="Hide mode",
+                            value=hide,
+                            inline=True)
+            embed.add_field(name="User limit",
+                            value=limit,
+                            inline=True)
+
+            embed.set_thumbnail(url="https://raw.githubusercontent.com/NapoII/HyperCarry-Discord-Bot/main/HyperCarry-Discord-Bot/img/iCarry_Avatar.png")
+
+            embed.set_footer(text="for help type /vc_help",
+                 icon_url="https://raw.githubusercontent.com/NapoII/HyperCarry-Discord-Bot/main/HyperCarry-Discord-Bot/img/iCarry_Avatar.png")
+            channel_msg = await new_channel.send(embed=embed)
+
+            fill_item_in_channel(new_channel.id, "channel_msg_id", channel_msg.id, json_path)
 
             #new_channel = await category.create_voice_channel(f"{random_pic} | {user.name}")
             await user.move_to(new_channel)
             user_img = user.display_avatar
-            embed_text = f"""- `{user_name}` is the channel owner from
-            <#{new_channel.id}>.
 
-He can edit the channel with the following commands:
-{vc_user_command_list}"""
-            embed = discord.Embed(title="Commands to edit the channel:", description= embed_text, color=0x00ff00)
+            await new_channel.send(embed=help_embed)
 
-            # Here it is assumed that 'create_channel' is the reference to the created voice channel.
-            embed.set_thumbnail(url=user_img)
-            await new_channel.send(embed=embed)
             self.voice_channels[new_channel.id] = user.id
 
 
@@ -155,13 +184,13 @@ class bot_vc_rename(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    description = "Rename your voice channel."
+    description = "Rename the Voice Channel."
 
     @app_commands.command(name="vc_rename", description=description)
     @app_commands.describe(
         new_channel_name="New name for your Voice Channel.",
     )
-    async def vc_rename(self, interaction: discord.Interaction, new_channel_name: str,):
+    async def vc_rename(self , interaction: discord.Interaction, new_channel_name: str,):
         self.new_channel_name = new_channel_name
 
         interaction_user_id = interaction.user.id
@@ -169,17 +198,61 @@ class bot_vc_rename(commands.Cog):
         if is_he_channel_admin(interaction_user_id, target_channel_id, json_path) == True:
 
             old_name = interaction.channel.name
-            await interaction.channel.edit(name= new_channel_name)
+            await interaction.channel.edit(name = new_channel_name)
 
-            embed=discord.Embed(title="Channel name has been changed", description=f"""from `{old_name}` to `{new_channel_name}`.
+            embed = discord.Embed(title="Channel name has been changed", description=f"""from `{old_name}` to `{new_channel_name}`.
                                     
-                                <#{interaction.channel.id}>
-                                    
-                                    you can edit your channel with:
-                                    {vc_user_command_list}""", color=0xfffff)
+                                <#{interaction.channel.id}>""")
             embed.set_thumbnail(url="https://i.imgur.com/bhRp1Il.png")
             msg = await interaction.response.send_message(embed=embed, ephemeral=True,)
+
+
+
+            channel_msg_id = get_item_from_channel("channel_msg_id", target_channel_id, json_path)
+            channel_msg = await interaction.channel.fetch_message(channel_msg_id)
+
+            data = read_json_file(json_path)
+            owner_id = find_main_key(interaction.channel.id, data)
+            limit = interaction.channel.user_limit
+            admin_list = get_item_from_channel("admin", interaction.channel.id, data)
+            admin_list_len = len(admin_list)
+            owner = await self.bot.fetch_user(owner_id)
         
+            x = -1
+            admin_text = ""
+            while True:
+                x = x + 1
+                if x == admin_list_len:
+                    break
+                admin = admin_list[x]
+                admin_text = admin_text +f"<@{admin}> "
+
+            stay = get_item_from_channel("stay", interaction.channel.id, data)
+            hide = get_item_from_channel("hide", interaction.channel.id, data)
+
+
+            embed = discord.Embed(title=f"<#{interaction.channel.id}>",
+                                description=f"<@{owner.id}>, is the owner of this Voice Channel\nThe following User have admin rights on this channel:\n{admin_text}\n",
+                                colour=0x00b0f4)
+
+            embed.set_author(name="Channel Info")
+
+            embed.add_field(name="Stay mode",
+                            value=stay,
+                            inline=True)
+            embed.add_field(name="Hide mode",
+                            value=hide,
+                            inline=True)
+            embed.add_field(name="User limit",
+                            value=limit,
+                            inline=True)
+
+            embed.set_thumbnail(url="https://raw.githubusercontent.com/NapoII/HyperCarry-Discord-Bot/main/HyperCarry-Discord-Bot/img/iCarry_Avatar.png")
+
+            embed.set_footer(text="for help type /vc_help",
+                 icon_url="https://raw.githubusercontent.com/NapoII/HyperCarry-Discord-Bot/main/HyperCarry-Discord-Bot/img/iCarry_Avatar.png")
+            await channel_msg.edit(embed=embed)
+
         else:
             if len(get_list_for_all_admin_server_from_user(interaction_user_id, json_path)) <= 0:
                 embed=discord.Embed(title="You do not have a channel with admin rights", description=f"""You can create a channel by jumping into the create channel:      
@@ -231,12 +304,56 @@ class bot_vc_limit(commands.Cog):
 
             embed=discord.Embed(title="Channel limit has been changed", description=f"""from `{old_limit}` to `{new_limit}`.
                                     
-                                <#{channel_id}>
-                                    
-                                    you can edit your channel with:
-                                    {vc_user_command_list}""", color=0xfffff)
+                                <#{channel_id}>""", color=0xfffff)
             embed.set_thumbnail(url="https://i.imgur.com/bhRp1Il.png")
-            msg = await interaction.response.send_message(embed=embed, ephemeral=True, )
+            msg = await interaction.response.send_message(embed=embed, ephemeral=True)
+
+            target_channel_id = interaction.channel.id
+            channel_msg_id = get_item_from_channel("channel_msg_id", target_channel_id, json_path)
+            channel_msg = await interaction.channel.fetch_message(channel_msg_id)
+
+            data = read_json_file(json_path)
+            owner_id = find_main_key(interaction.channel.id, data)
+            limit = interaction.channel.user_limit
+            admin_list = get_item_from_channel("admin", interaction.channel.id, data)
+            admin_list_len = len(admin_list)
+            owner = await self.bot.fetch_user(owner_id)
+        
+            x = -1
+            admin_text = ""
+            while True:
+                x = x + 1
+                if x == admin_list_len:
+                    break
+                admin = admin_list[x]
+                admin_text = admin_text +f"<@{admin}> "
+
+            stay = get_item_from_channel("stay", interaction.channel.id, data)
+            hide = get_item_from_channel("hide", interaction.channel.id, data)
+
+
+            embed = discord.Embed(title=f"<#{interaction.channel.id}>",
+                                description=f"<@{owner.id}>, is the owner of this Voice Channel\nThe following User have admin rights on this channel:\n{admin_text}\n",
+                                colour=0x00b0f4)
+
+            embed.set_author(name="Channel Info")
+
+            embed.add_field(name="Stay mode",
+                            value=stay,
+                            inline=True)
+            embed.add_field(name="Hide mode",
+                            value=hide,
+                            inline=True)
+            embed.add_field(name="User limit",
+                            value=limit,
+                            inline=True)
+
+            embed.set_thumbnail(url="https://raw.githubusercontent.com/NapoII/HyperCarry-Discord-Bot/main/HyperCarry-Discord-Bot/img/iCarry_Avatar.png")
+
+            embed.set_footer(text="for help type /vc_help",
+                 icon_url="https://raw.githubusercontent.com/NapoII/HyperCarry-Discord-Bot/main/HyperCarry-Discord-Bot/img/iCarry_Avatar.png")
+            await channel_msg.edit(embed=embed)
+
         else:
             if len(get_list_for_all_admin_server_from_user(interaction_user_id, json_path)) <= 0:
                 embed=discord.Embed(title="You do not have a channel with admin rights", description=f"""You can create a channel by jumping into the create channel:      
@@ -290,12 +407,56 @@ class bot_vc_stay(commands.Cog):
 
             embed=discord.Embed(title="Stay status was changed..", description=f"""{text}
                                     
-                                <#{channel_id}>
-                                    
-                                    you can edit your channel with:
-                                    {vc_user_command_list}""", color=0xfffff)
+                                <#{channel_id}>""", color=0xfffff)
             embed.set_thumbnail(url="https://i.imgur.com/bhRp1Il.png")
-            msg = await interaction.response.send_message(embed=embed, ephemeral=True, )
+            msg = await interaction.response.send_message(embed=embed, ephemeral=True)
+
+            target_channel_id = interaction.channel.id
+            channel_msg_id = get_item_from_channel("channel_msg_id", target_channel_id, json_path)
+            channel_msg = await interaction.channel.fetch_message(channel_msg_id)
+
+            data = read_json_file(json_path)
+            owner_id = find_main_key(interaction.channel.id, data)
+            limit = interaction.channel.user_limit
+            admin_list = get_item_from_channel("admin", interaction.channel.id, data)
+            admin_list_len = len(admin_list)
+            owner = await self.bot.fetch_user(owner_id)
+        
+            x = -1
+            admin_text = ""
+            while True:
+                x = x + 1
+                if x == admin_list_len:
+                    break
+                admin = admin_list[x]
+                admin_text = admin_text +f"<@{admin}> "
+
+            stay = get_item_from_channel("stay", interaction.channel.id, data)
+            hide = get_item_from_channel("hide", interaction.channel.id, data)
+
+
+            embed = discord.Embed(title=f"<#{interaction.channel.id}>",
+                                description=f"<@{owner.id}>, is the owner of this Voice Channel\nThe following User have admin rights on this channel:\n{admin_text}\n",
+                                colour=0x00b0f4)
+
+            embed.set_author(name="Channel Info")
+
+            embed.add_field(name="Stay mode",
+                            value=stay,
+                            inline=True)
+            embed.add_field(name="Hide mode",
+                            value=hide,
+                            inline=True)
+            embed.add_field(name="User limit",
+                            value=limit,
+                            inline=True)
+
+            embed.set_thumbnail(url="https://raw.githubusercontent.com/NapoII/HyperCarry-Discord-Bot/main/HyperCarry-Discord-Bot/img/iCarry_Avatar.png")
+
+            embed.set_footer(text="for help type /vc_help",
+                 icon_url="https://raw.githubusercontent.com/NapoII/HyperCarry-Discord-Bot/main/HyperCarry-Discord-Bot/img/iCarry_Avatar.png")
+            await channel_msg.edit(embed=embed)
+
             
         else:
             if len(get_list_for_all_admin_server_from_user(interaction_user_id, json_path)) <= 0:
@@ -324,65 +485,71 @@ write the command in the desired channel.""", color=0xff0000)
                 msg = await interaction.response.send_message(embed=embed, ephemeral=True,)
 
 
-class bot_vc_status(commands.Cog):
+
+
+class bot_vc_kick(commands.Cog):
+    def __init__(self, bot: commands.Bot, interaction: discord.Interaction) -> None:
+        self.bot = bot
+
+    members = discord.VoiceChannel.members
+
+    description = "Kick a user from your Channel"
+    
+    @app_commands.command(name="vc_kick", description=description)
+    @app_commands.describe(player_to_kick='Player choose')
+    @app_commands.choices(player_to_kick=[
+        discord.app_commands.Choice(name='Blue', value=1),
+        discord.app_commands.Choice(name='Green', value=3)])
+    
+    async def choisecolor(self, interaction: discord.Interaction, player_to_kick: discord.app_commands.Choice[int]):
+        # code for kick the user.id ....
+        await interaction.response.send_message(f"test {player_to_kick.name}")                                                                                  
+
+                                                                          
+
+
+ 
+
+
+
+class bot_vc_help(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    description = "Displays the status of the voice channel"
+    description = "Shows you a list of all commands and your channels on which you are an administrator"
 
-    @app_commands.command(name="vc_status", description=description)
+    @app_commands.command(name="vc_help", description=description)
 
-    async def vc_stay(self, interaction: discord.Interaction):
+    async def vc_help(self, interaction: discord.Interaction):
+
         interaction_user_id = interaction.user.id
         interaction_channel = interaction.channel
 
-        owner_id = find_main_key(json_path, interaction_channel.id)
-        print(f"interaction_channel.id {interaction_channel.id}")
-        data = read_json_file(json_path)
-        channel_name = interaction_channel.name
-        admin_list = get_item_from_channel("admin", interaction_channel.id, data)
-        admin_list_len = len(admin_list)
-        x = -1
-        admin_text = ""
-        while True:
-            x = x + 1
-            if x == admin_list_len:
-                break
-            admin = admin_list[x]
-            admin_text = admin_text +f"@{admin} "
+        msg = await interaction.channel.send(embed=help_embed)
 
-        stay = get_item_from_channel("stay", interaction_channel.id, data)
-        hide = get_item_from_channel("hide", interaction_channel.id, data)
+        list_of_admin_channel_from_user = get_list_for_all_admin_server_from_user(interaction_user_id, json_path)
+        list_of_admin_channel_from_user_len = len(list_of_admin_channel_from_user)
+        try:
+            if list_of_admin_channel_from_user_len is not 0:
+                x = -1
+                list_text = ""
+                while True:
+                    x = x + 1
+                    if x == list_of_admin_channel_from_user_len:
+                        break
+                    list_text = list_text +f"<#{list_of_admin_channel_from_user[x]}>\n"
 
 
+                embed = discord.Embed(title="List of all your channels with administrator rights",
+                        description=f"{list_text}")
+                msg = await interaction.response.send_message(embed=embed, ephemeral=True)
+            else:
+                embed = discord.Embed(title="You don't have a voice channel or right for one at the moment", description=f"But you can create one under <#{create_channel_id}>")
+            
+            msg = await interaction.response.send_message(embed=embed, ephemeral=True)
+        except:
+            pass
 
-        embed = discord.Embed(title="Voice Channel Status",
-                    colour=0x00b0f4)
-
-        embed.set_author(name=interaction.user.name,
-                        icon_url=interaction.user.display_avatar)
-
-        embed.add_field(name="Channel Name:",
-                        value=channel_name,
-                        inline=False)
-        embed.add_field(name="Admin rights",
-                        value=admin_text,
-                        inline=False)
-        embed.add_field(name="Stay status",
-                        value=stay,
-                        inline=True)
-        embed.add_field(name="Hide statsus",
-                        value=hide,
-                        inline=True)
-        msg = await interaction.response.send_message(embed=embed, ephemeral=True)
-
-
-        embed = discord.Embed(title="This is not a private voice channel",
-                            description=f"You are not in a private Voice channel and can therefore not display a status, go to the <#{category_private_voice_id}> area for this.")
-
-        embed.set_thumbnail(url="https://i.imgur.com/LFG51bE.png")
-        msg = await interaction.response.send_message(embed=embed, ephemeral=True)
-    
 
 
 
@@ -392,6 +559,7 @@ async def setup(bot: commands.Bot):
     await bot.add_cog(bot_vc_rename(bot), guild=discord.Object(guild_id))
     await bot.add_cog(bot_vc_limit(bot), guild=discord.Object(guild_id))
     await bot.add_cog(bot_vc_stay(bot), guild=discord.Object(guild_id))
-    #await bot.add_cog(bot_vc_status(bot), guild=discord.Object(guild_id))
+    await bot.add_cog(bot_vc_help(bot), guild=discord.Object(guild_id))
+    # await bot.add_cog(bot_vc_kick(bot), guild=discord.Object(guild_id))
 
 
