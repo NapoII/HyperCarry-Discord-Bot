@@ -566,3 +566,27 @@ def fill_item_in_channel(channel_id, item, fill, json_path):
 
     # If the function reaches here, the channel was not found
     print(f"Channel {channel_id} not found.")
+
+
+def discord_time_convert(time):
+    """
+    Converts a Unix timestamp to Discord time format.
+
+    Args:
+        time (int): A Unix timestamp to convert to Discord time format.
+
+
+
+    Returns:
+        - discord_time (str): A string representing the input timestamp in Discord time format.
+
+    Example Usage:
+        >>> timestamp = 1617123999
+        >>> discord_time = discord_time_convert(timestamp)
+        >>> print(discord_time)
+        '<t:1617123999:R>'
+            1678369942473.0
+    """
+    time = int(str(time)[:10])
+    discord_time = (f"<t:{time}:R>")
+    return discord_time

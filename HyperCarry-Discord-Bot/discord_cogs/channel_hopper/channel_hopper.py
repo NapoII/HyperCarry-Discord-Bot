@@ -13,11 +13,9 @@ from discord import app_commands
 from discord import app_commands, ui
 
 
-# get the path of the current directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
 bot_path = os.path.abspath(sys.argv[0])
 bot_folder = os.path.dirname(bot_path)
-# construct the path to the config.ini file relative to the current directory
 config_dir = os.path.join(bot_folder, "cfg", "config.ini")
 category_private_voice_id = read_config(config_dir, "category", "category_private_voice_id", "int")
 json_path = os.path.join(current_dir, "channel_data.json")
@@ -32,7 +30,6 @@ help_embed.set_author(name="/vc_help")
 guild_id = read_config(config_dir, "client", "guild_id", "int")
 if guild_id == None:
     guild_id = 1
-guild_id = int(guild_id)
 guild = discord.Object(id=guild_id)
 
 
@@ -40,14 +37,92 @@ create_channel_id =  read_config(config_dir, "channel", "create_channel_id", "in
 
 if create_channel_id == None:
     create_channel_id = 1
-create_channel_id = int(create_channel_id)
 
-category_private_voice_id = read_config(config_dir, "category", "category_private_voice_id")
+category_private_voice_id = read_config(config_dir, "category", "category_private_voice_id", "int")
 if category_private_voice_id == None:
     category_private_voice_id = 1
-category_private_voice_id = int(category_private_voice_id)
 
 #channel_name_list = ["Airfield", "Bandit Camp", "Harbor", "Junkyard","Large Oil Rig","Launch Site","Lighthouse","Military Tunnels","Oil Rig","Outpost","Mining Outpost","Power Plant","Sewer Branch","Satellite Dish Array","The Dome","Train Yard","Train Tunnel Network","Water Treatment Plant"]
+
+
+class channelHoper_setup(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        self.config_dir = config_dir  # Beispiel-Konfigurationsverzeichnis
+
+
+        # Hier wird die Methode beim Start des Bots aufgerufen
+        self.bot.loop.create_task(self.setup_channel_hopper())
+
+    async def setup_channel_hopper(self):
+        print ("\n --> setup_channel_hopper\n")
+        await self.bot.wait_until_ready()  
+        guild = self.bot.get_guild(guild_id)  
+
+        was_created_list = []
+# Creates a new category
+
+        category_name = "--🔒🔊 - Private Voice - 🔊🔒--"
+        delt_msg_channel_id = read_config(config_dir,"category", "category_private_voice_id", "int")
+        category_private_voice = discord.utils.get(guild.categories, id=delt_msg_channel_id)
+
+        if category_private_voice != None:
+            print(f"The category {category_private_voice.name} already exists.")
+
+        else:
+            print(f"The category {category_name} does not yet exist and will now be created")
+            overwrites = {
+                guild.default_role: discord.PermissionOverwrite(read_messages=True),  # Everyone can view and join the channel
+                guild.me: discord.PermissionOverwrite(send_messages=True, read_messages=True)  # The bot can send messages, others can only view
+            }
+        
+            category_private_voice = await guild.create_category(category_name, overwrites=overwrites)
+            print(f"The category {category_name} was created.")
+            category_private_voice_id = category_private_voice.id
+            write_config(config_dir, "channel","category_private_voice_id", category_private_voice_id)
+
+            was_created_list.append(category_private_voice)
+
+
+# Creates a new text channel
+        channel_name = "➕-create-channel-➕"
+        create_channel_id = read_config(config_dir,"channel", "create_channel_id", "int")
+        create_channel = discord.utils.get(guild.text_channels, id=create_channel_id)
+
+        if create_channel != None:
+            print(f"The channel {create_channel.name} already exists.")
+        else:
+            print(f"The channel {channel_name} does not exist.")
+            create_channel = await guild.create_voice_channel(channel_name, category=category_private_voice)
+            print(f"The channel {create_channel.name} was created.")
+            write_config(config_dir, "channel", "create_channel_id", create_channel.id)
+
+            was_created_list.append(create_channel)
+
+
+        was_created_list_len = len(was_created_list)
+        if was_created_list_len != 0:
+            x = -1
+            text = ""
+            while True:
+                x = x + 1
+                if x == was_created_list_len:
+                    break
+                id = was_created_list[x].id
+                text = text + f"<#{id}>\n"
+
+            dc_time = discord_time_convert(time.time())
+            embed = discord.Embed(title=f"The following Channel Hopper System Channels have been created:",
+                                description=f"> The following channels had to be created:\n{text}\ncreated: {dc_time}",
+                                colour=0xffff80)
+            try:
+                bot_cmd_channel_id = read_config(config_dir, "channel", "bot_cmd_channel_id", "int")
+                bot_cmd_channel = guild.get_channel(bot_cmd_channel_id)
+                await bot_cmd_channel.send(embed=embed)
+            except:
+                pass
+
+
 
 #player_have_channel_list = []
 class channelHoper(commands.Cog):
@@ -530,7 +605,7 @@ class bot_vc_help(commands.Cog):
         list_of_admin_channel_from_user = get_list_for_all_admin_server_from_user(interaction_user_id, json_path)
         list_of_admin_channel_from_user_len = len(list_of_admin_channel_from_user)
         try:
-            if list_of_admin_channel_from_user_len is not 0:
+            if list_of_admin_channel_from_user_len != 0:
                 x = -1
                 list_text = ""
                 while True:
@@ -555,6 +630,7 @@ class bot_vc_help(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
+    await bot.add_cog(channelHoper_setup(bot), guild=discord.Object(guild_id))
     await bot.add_cog(channelHoper(bot), guild=discord.Object(guild_id))
     await bot.add_cog(bot_vc_rename(bot), guild=discord.Object(guild_id))
     await bot.add_cog(bot_vc_limit(bot), guild=discord.Object(guild_id))
