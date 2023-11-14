@@ -75,7 +75,7 @@ Example Usage:
         config.read(config_dir)
         load_config = (config[section][option])
         config_float = float(load_config)
-        print(f"Config loaded: [ ({option})  = ({load_config}) ] conv to float", "g")
+        print(f"Config loaded: [ ({option})  = ({load_config}) ] conv to float")
 
         return config_int
     if arg == "int":
@@ -83,7 +83,7 @@ Example Usage:
         config.read(config_dir)
         load_config = (config[section][option])
         config_int = int(load_config)
-        print(f"Config loaded: [ ({option})  = ({load_config}) ] conv to int", "g")
+        print(f"Config loaded: [ ({option})  = ({load_config}) ] conv to int")
 
         return config_int
     
@@ -92,7 +92,7 @@ Example Usage:
         config.read(config_dir)
         load_config = (config[section][option])
         config_tuple = tuple(map(int, load_config.split(",")))
-        print(f"Config loaded: [ ({option})  = ({load_config}) ] conv to tuple", "g")
+        print(f"Config loaded: [ ({option})  = ({load_config}) ] conv to tuple")
 
         return config_tuple
     
@@ -101,7 +101,7 @@ Example Usage:
         config.read(config_dir)
         load_config = (config[section][option])
 
-        print(f"Config loaded: [ ({option})  = ({load_config}) ]", "g")
+        print(f"Config loaded: [ ({option})  = ({load_config}) ]")
 
         return load_config
 

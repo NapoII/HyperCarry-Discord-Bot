@@ -48,8 +48,7 @@ if category_private_voice_id == None:
 class channelHoper_setup(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.config_dir = config_dir  # Beispiel-Konfigurationsverzeichnis
-
+        self.config_dir = config_dir
 
         # Hier wird die Methode beim Start des Bots aufgerufen
         self.bot.loop.create_task(self.setup_channel_hopper())
@@ -63,8 +62,8 @@ class channelHoper_setup(commands.Cog):
 # Creates a new category
 
         category_name = "--🔒🔊 - Private Voice - 🔊🔒--"
-        delt_msg_channel_id = read_config(config_dir,"category", "category_private_voice_id", "int")
-        category_private_voice = discord.utils.get(guild.categories, id=delt_msg_channel_id)
+        category_private_voice_id = read_config(config_dir, "category", "category_private_voice_id", "int")
+        category_private_voice = discord.utils.get(guild.categories, id=category_private_voice_id)
 
         if category_private_voice != None:
             print(f"The category {category_private_voice.name} already exists.")
@@ -79,15 +78,15 @@ class channelHoper_setup(commands.Cog):
             category_private_voice = await guild.create_category(category_name, overwrites=overwrites)
             print(f"The category {category_name} was created.")
             category_private_voice_id = category_private_voice.id
-            write_config(config_dir, "channel","category_private_voice_id", category_private_voice_id)
+            write_config(config_dir, "category","category_private_voice_id", category_private_voice_id)
 
             was_created_list.append(category_private_voice)
 
 
-# Creates a new text channel
+# Creates a new voice channel
         channel_name = "➕-create-channel-➕"
         create_channel_id = read_config(config_dir,"channel", "create_channel_id", "int")
-        create_channel = discord.utils.get(guild.text_channels, id=create_channel_id)
+        create_channel = discord.utils.get(guild.voice_channels, id=create_channel_id)
 
         if create_channel != None:
             print(f"The channel {create_channel.name} already exists.")
@@ -143,9 +142,16 @@ class channelHoper(commands.Cog):
 
             channel_id = get_channel_id_from(user_id, json_path)
             channel = self.bot.get_channel(channel_id)
-            await user.move_to(channel)
 
+            embed = discord.Embed(title="You already have a voice channel",
+                      description=f"""> Only one voice channel per user.\n> I moved you into the channel.
+                      
+                      <#{channel_id}>""",
+                      colour=0xff0000)
+
+            await user.move_to(channel)
             await user.send(embed=help_embed)
+            await user.send(embed=embed)
 
         if is_user_in(user_id, json_path) == False:
         #if user_id not in self.voice_channels.values():
@@ -212,6 +218,8 @@ class channelHoper(commands.Cog):
             self.voice_channels[new_channel.id] = user.id
 
 
+
+
     async def delete_voice_channel(self, channel):
         if is_channel_id_in(channel.id, json_path) == True:
         # if channel.id in self.voice_channels:
@@ -245,7 +253,7 @@ class channelHoper(commands.Cog):
     async def on_voice_state_update(self, member, before, after):
         if before.channel == after.channel:  # The user has not changed his language status
             return
-
+        #create_channel_id =  read_config(config_dir, "channel", "create_channel_id", "int")
         if after.channel and after.channel.id == create_channel_id:  # The user has joined the channel being watched
             await self.create_voice_channel(member)
         #elif before.channel and before.channel.id in self.voice_channels:  # The user has left the created channel
@@ -253,6 +261,7 @@ class channelHoper(commands.Cog):
             channel = discord.utils.get(member.guild.voice_channels, id=before.channel.id)
             if channel and len(channel.members) == 0:
                 await self.delete_voice_channel(channel)
+
 
 
 class bot_vc_rename(commands.Cog):
@@ -353,7 +362,8 @@ class bot_vc_rename(commands.Cog):
 write the command in the desired channel.""", color=0xff0000)
                 embed.set_thumbnail(url="https://i.imgur.com/LFG51bE.png")
                 msg = await interaction.response.send_message(embed=embed, ephemeral=True,)
-                    
+
+
 
 class bot_vc_limit(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -456,6 +466,7 @@ write the command in the desired channel.""", color=0xff0000)
                 msg = await interaction.response.send_message(embed=embed, ephemeral=True,)
 
 
+
 class bot_vc_stay(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
@@ -541,7 +552,6 @@ class bot_vc_stay(commands.Cog):
                 msg = await interaction.response.send_message(embed=embed, ephemeral=True,)
 
 
-
             else:
                 channel_id_list = get_list_for_all_admin_server_from_user(interaction_user_id,json_path)
                 channel_id_list_len = len(channel_id_list)
@@ -561,7 +571,6 @@ write the command in the desired channel.""", color=0xff0000)
 
 
 
-
 class bot_vc_kick(commands.Cog):
     def __init__(self, bot: commands.Bot, interaction: discord.Interaction) -> None:
         self.bot = bot
@@ -578,12 +587,7 @@ class bot_vc_kick(commands.Cog):
     
     async def choisecolor(self, interaction: discord.Interaction, player_to_kick: discord.app_commands.Choice[int]):
         # code for kick the user.id ....
-        await interaction.response.send_message(f"test {player_to_kick.name}")                                                                                  
-
-                                                                          
-
-
- 
+        await interaction.response.send_message(f"test {player_to_kick.name}")                                                                                                                                                  
 
 
 
@@ -624,8 +628,6 @@ class bot_vc_help(commands.Cog):
             msg = await interaction.response.send_message(embed=embed, ephemeral=True)
         except:
             pass
-
-
 
 
 

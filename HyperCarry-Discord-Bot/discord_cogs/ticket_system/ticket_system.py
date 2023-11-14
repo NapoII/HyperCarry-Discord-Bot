@@ -11,7 +11,7 @@ import random
 import discord
 from discord import app_commands
 from discord import app_commands, ui
-
+from discord import Color
 
 # get the path of the current directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -21,8 +21,6 @@ bot_folder = os.path.dirname(bot_path)
 config_dir = os.path.join(bot_folder, "cfg", "config.ini")
 category_private_voice_id = int(read_config(config_dir, "category", "category_private_voice_id"))
 json_path = os.path.join(current_dir, "channel_data.json")
-
-
 
 
 guild_id = read_config(config_dir, "client", "guild_id", "int")
@@ -40,7 +38,7 @@ if category_private_voice_id == None:
     category_private_voice_id = 1
 
 
-class TicketCog(commands.Cog):
+class ticket_system_setup(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config_dir = config_dir  # Beispiel-Konfigurationsverzeichnis
@@ -56,6 +54,37 @@ class TicketCog(commands.Cog):
 
 
         was_created_list = []
+
+
+# Creates a new Role
+        role_name = "💼-support-team"
+        role_colour = discord.Color.from_rgb(255, 255, 255)
+        support_team_role_id = read_config(config_dir,"role", "support_team_role_id", "int")
+        support_team_role = discord.utils.get(guild.roles, id=support_team_role_id)
+
+        if support_team_role != None:
+            print(f"The role {support_team_role.name} already exists.")
+        else:
+            print(f"The role {role_name} does not exist.")
+            support_team_role = await guild.create_role(name=role_name, colour=role_colour)
+            print(f"The role {support_team_role.name} was created.")
+            write_config(config_dir, "role", "support_team_role_id", support_team_role.id)
+
+
+# Creates a new Role
+        role_name = "💼-aktiv-support-team"
+        role_colour = discord.Color.from_rgb(189, 152, 255)
+        aktiv_support_team_role_id = read_config(config_dir,"role", "aktiv_support_team_role_id", "int")
+        aktiv_support_team_role = discord.utils.get(guild.roles, id=aktiv_support_team_role_id)
+
+        if aktiv_support_team_role != None:
+            print(f"The role {aktiv_support_team_role.name} already exists.")
+        else:
+            print(f"The role {role_name} does not exist.")
+            aktiv_support_team_role = await guild.create_role(name=role_name, colour=role_colour)
+            print(f"The role {aktiv_support_team_role.name} was created.")
+            write_config(config_dir, "role", "aktiv_support_team_role_id", aktiv_support_team_role.id)
+
 
 # Creates a new category
         category_name = "------ 👮 - Support - 👮 ------"
@@ -74,7 +103,7 @@ class TicketCog(commands.Cog):
             category_support = await guild.create_category(category_name, overwrites=overwrites)
             print(f"The category {category_name} was created.")
             category_support_id = category_support.id
-            write_config(config_dir, "channel","category_support_id", category_support_id)
+            write_config(config_dir, "category","category_support_id", category_support_id)
 
             was_created_list.append(category_support)
 
@@ -96,15 +125,50 @@ class TicketCog(commands.Cog):
             was_created_list.append(open_a_ticket_channel)
 
 
-            open_a_ticket_msg_id = read_config(config_dir,"msg", "open_a_ticket_msg_id", "int")
-            try:
-                open_a_ticket_msg = await open_a_ticket_channel.fetch_message(open_a_ticket_msg_id)
-                print(f"The channel open_a_ticket_msg already exists.")
-                
-            except:
-                embed = discord.Embed(title="Space holder for Ticket msg", description="The ticket system window", color=0x00ff00)
-                open_a_ticket_msg = await open_a_ticket_channel.send(embed=embed)
-                write_config(config_dir, "msg", "open_a_ticket_msg_id", open_a_ticket_msg.id)
+
+# Creates a new msg
+        open_a_ticket_msg_id = read_config(config_dir,"msg", "open_a_ticket_msg_id", "int")
+        try:
+            open_a_ticket_msg = await open_a_ticket_channel.fetch_message(open_a_ticket_msg_id)
+            print(f"The channel open_a_ticket_msg already exists.")
+            
+        except:
+            embed = discord.Embed(title="Space holder for Ticket msg", description="The ticket system window", color=0x00ff00)
+            open_a_ticket_msg = await open_a_ticket_channel.send(embed=embed)
+            write_config(config_dir, "msg", "open_a_ticket_msg_id", open_a_ticket_msg.id)
+
+
+
+# Creates a new text channel
+        channel_name = "💼-support-team"
+        support_team_channel_id = read_config(config_dir,"channel", "support_team_channel_id", "int")
+        support_team_channel = discord.utils.get(guild.text_channels, id=support_team_channel_id)
+
+        if support_team_channel != None:
+            print(f"The channel {support_team_channel.name} already exists.")
+        else:
+            print(f"The channel {channel_name} does not exist.")
+            support_team_channel = await guild.create_text_channel(channel_name, category=category_support)
+            await support_team_channel.set_permissions(guild.default_role, read_messages=False)
+            await support_team_channel.set_permissions(support_team_role, send_messages=False, read_messages=True)
+            print(f"The channel {support_team_channel.name} was created.")
+            write_config(config_dir, "channel", "support_team_channel_id", support_team_channel.id)
+
+            was_created_list.append(support_team_channel)
+
+
+
+# Creates a new msg
+        support_team_msg_id = read_config(config_dir,"msg", "support_team_msg_id", "int")
+        try:
+            support_team_msg = await support_team_channel.fetch_message(support_team_msg_id)
+            print(f"The channel support_team_msg already exists.")
+            
+        except:
+            embed = discord.Embed(title="Space holder for Ticket msg", description="The Support Team System window", color=0x00ff00)
+            support_team_msg = await support_team_channel.send(embed=embed)
+            write_config(config_dir, "msg", "support_team_msg_id", support_team_msg.id)
+
 
 
 # Creates a new category
@@ -117,14 +181,17 @@ class TicketCog(commands.Cog):
         else:
             print(f"The category {category_name} does not yet exist and will now be created")
             overwrites = {
-                guild.default_role: discord.PermissionOverwrite(read_messages=True),  # Everyone can view and join the channel
-                guild.me: discord.PermissionOverwrite(send_messages=True, read_messages=True)  # The bot can send messages, others can only view
+                guild.default_role: discord.PermissionOverwrite(read_messages=False),  # Everyone can view and join the channel
+                guild.me: discord.PermissionOverwrite(send_messages=False, read_messages=True, manage_channels=False),  # The bot can send messages, others can only view
+                support_team_role: discord.PermissionOverwrite(manage_messages=True, view_guild_insights=True, read_message_history=True, view_channel=True, read_messages=True, send_messages=False, connect=False, speak=False)
             }
+
+
         
             category_ticket_archiv = await guild.create_category(category_name, overwrites=overwrites)
             print(f"The category {category_name} was created.")
             category_ticket_archiv_id = category_ticket_archiv.id
-            write_config(config_dir, "channel","category_ticket_archiv_id", category_ticket_archiv_id)
+            write_config(config_dir, "category","category_ticket_archiv_id", category_ticket_archiv_id)
 
             was_created_list.append(category_ticket_archiv)
 
@@ -157,8 +224,7 @@ class TicketCog(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(TicketCog(bot), guild=discord.Object(guild_id))
-
+    await bot.add_cog(ticket_system_setup(bot), guild=discord.Object(guild_id))
 
 
 

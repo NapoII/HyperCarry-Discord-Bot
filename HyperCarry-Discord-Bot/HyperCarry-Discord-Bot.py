@@ -66,9 +66,8 @@ class MyBot(commands.Bot):
         # "Work_Folder.Rust.test"
         # "discord_cogs.admin.say",
         self.initial_extensions = [
-            "discord_cogs.channel_hopper.channel_hopper",
             "discord_cogs.ticket_system.ticket_system",
-            
+            "discord_cogs.channel_hopper.channel_hopper",
         ]
 
     async def setup_hook(self):
@@ -107,7 +106,7 @@ class MyBot(commands.Bot):
             print(f"The category {category_name} was created.")
             category_admin_name = category_admin.name
             category_admin_id = category_admin.id
-            write_config(config_dir, "channel","category_admin_id", category_admin_id)
+            write_config(config_dir, "category","category_admin_id", category_admin_id)
             
             was_created_list.append(category_admin)
 
