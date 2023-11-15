@@ -180,19 +180,16 @@ class MyBot(commands.Bot):
         print(str(text))
 
         embed = discord.Embed(title=py_name, color=0xff80ff)
-        embed.set_author(name="created by Napo_II",
-                         url="https://github.com/NapoII/HyperCarry-Disocrd-Bot")
+        embed.set_author(name="created by Napo_II", url="https://github.com/NapoII/HyperCarry-Disocrd-Bot")
         embed.set_thumbnail(url="https://i.imgur.com/hcVwvZF.png")
         embed.add_field(name="Version", value=v, inline=True)
-        embed.add_field(
-            name="python", value=f"{python_version()}", inline=True)
+        embed.add_field(name="python", value=f"{python_version()}", inline=True)
         embed.add_field(name="github", value="https://github.com/NapoII/HyperCarry-Discord-Bot", inline=False)
         await bot_cmd_channel.send(embed=embed)
 
 
         dc_time = discord_time_convert(time.time())
-        embed = discord.Embed(
-            title="📶 Bot is Online and Rdy to Run... 📶",  description=f"{dc_time}", color=0xff8080)
+        embed = discord.Embed(title="📶 Bot is Online and Rdy to Run... 📶",  description=f"{dc_time}", color=0xff8080)
         embed.add_field(name="client.name", value=self.user.name, inline=True)
         embed.add_field(name="guild.name", value=guild.name, inline=True)
         embed.add_field(name="guild.id", value=str(guild.id), inline=True)
