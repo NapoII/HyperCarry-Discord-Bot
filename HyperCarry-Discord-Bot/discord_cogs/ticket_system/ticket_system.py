@@ -20,9 +20,10 @@ bot_path = os.path.abspath(sys.argv[0])
 bot_folder = os.path.dirname(bot_path)
 # construct the path to the config.ini file relative to the current directory
 config_dir = os.path.join(bot_folder, "cfg", "config.ini")
-category_private_voice_id = int(read_config(config_dir, "category", "category_private_voice_id"))
-json_path = os.path.join(current_dir, "ticket_data.json")
+category_private_voice_id = read_config(config_dir, "category", "category_private_voice_id", "int")
+json_path_ticket = os.path.join(current_dir, "ticket_data.json")
 json_path_support = os.path.join(current_dir, "support_team_data.json")
+
 
 guild_id = read_config(config_dir, "client", "guild_id", "int")
 if guild_id == None:
@@ -99,8 +100,9 @@ class ticket_system_setup(commands.Cog):
         else:
             print(f"The category {category_name} does not yet exist and will now be created")
             overwrites = {
-                guild.default_role: discord.PermissionOverwrite(read_messages=True),  # Everyone can view and join the channel
+                guild.default_role: discord.PermissionOverwrite(read_messages=True, send_messages=False),  # Everyone can view and join the channel
                 guild.me: discord.PermissionOverwrite(send_messages=True, read_messages=True)  # The bot can send messages, others can only view
+            
             }
         
             category_support = await guild.create_category(category_name, overwrites=overwrites)
@@ -136,9 +138,14 @@ class ticket_system_setup(commands.Cog):
             print(f"The channel open_a_ticket_msg already exists.")
             
         except:
-            embed = discord.Embed(title="Hyper-Carry - Support System",
-                      description="Please click the most relevant button to your issue below and answer the messages sent to you to the best of your ability.\n\n**Please make sure your DMs are turned on as the bot will DM you your questions!**\n\n> **🚨 Report Player 🚨**\n> Use this ticket type to report a player for breaking the rules.",
-                      colour=0xffffff)
+            description= """Please click the most relevant button to your issue below and answer the messages sent to you to the best of your ability.
+
+**Please make sure your DMs are turned on as the bot will DM you your questions!**
+
+> **🚨 Report Player 🚨**
+> Use this ticket type to report a player for breaking the rules.
+"""
+            embed = discord.Embed(title="Hyper-Carry - Support System", description= description, colour=0xffffff)
             open_a_ticket_msg = await open_a_ticket_channel.send(embed=embed, view=ticket_button())
             write_config(config_dir, "msg", "open_a_ticket_msg_id", open_a_ticket_msg.id)
 
@@ -233,22 +240,49 @@ class support_team_button(discord.ui.View):
 
     @discord.ui.button(label="Support Cheack In", style=discord.ButtonStyle.green, custom_id="cheack_in")
     async def cheack_in(self, interaction: discord.Interaction, Button: discord.ui.Button):
+        
 
         timestemp = time.time()
         discord_time_str = discord_time_convert(timestemp)
         aktiv_support_team_role_id = read_config(config_dir, "role", "aktiv_support_team_role_id", "int")
+        support_team_role_id = read_config(config_dir, "role", "support_team_role_id", "int")
         support_team_channel_id = read_config(config_dir, "channel", "support_team_channel_id", "int")
+
         aktiv_support_team_role = interaction.guild.get_role(aktiv_support_team_role_id)
-        support_team_role = interaction.guild.get_role(aktiv_support_team_role_id)
+        support_team_role = interaction.guild.get_role(support_team_role_id)
 
-        if support_team_role:
+        interaction_user_roles  = interaction.user.roles
+        interaction_user_roles_id_list = []
+        for id in interaction_user_roles:
+            interaction_user_roles_id_list.append(id.id)
 
-            if not support_team_role in interaction.user.roles:
+
+        print (f"support_team_role= {support_team_role} = {type(support_team_role)}")
+        print (f"interaction_user_roles_id_list= {interaction_user_roles_id_list} = {type(interaction_user_roles_id_list)}")
+
+
+
+        if support_team_role.id not in interaction_user_roles_id_list:
+            embed = discord.Embed(title=f"You are not in the @💼-support-team  \nask a admin to add your Support team role",
+                        colour=0xff0000)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        else:
+            if aktiv_support_team_role.id in interaction_user_roles_id_list:
+                embed = discord.Embed(title=f"You are already checked in",
+                            colour=0xff0000)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+
+            else:
+
                 await interaction.response.defer(ephemeral=True)
-                await interaction.user.add_roles(support_team_role)
+                await interaction.user.add_roles(aktiv_support_team_role)
+
+                support_entry_in_data(json_path_support, time.time(), interaction.user.name, interaction.user.id)
+
                 description = f"""When a new ticket has opened, I will inform you here by pm.
                 
-                You can check out again in the following channel:
+                You can check out in the following channel:
                 <#{support_team_channel_id}>
                 
                 **You are checked in** {discord_time_str}
@@ -258,19 +292,13 @@ class support_team_button(discord.ui.View):
                             colour=0x80ff80)
                 await interaction.user.send(embed=embed)
 
-                support_entry_in_data(json_path_support, timestemp, interaction.user.name, interaction.user.id)
 
-                text = support_dashboard_text(json_path, interaction.guild.members, aktiv_support_team_role, support_team_role)
+                text = support_dashboard_text(json_path_ticket, interaction.guild.members, aktiv_support_team_role, support_team_role)
                 embed = discord.Embed(title="💼 Support Team - Dashboard 💼",
                                     description=text,
                                     colour=0xffffff)
                 await interaction.message.edit(embed=embed)
 
-
-            else:
-                embed = discord.Embed(title="💼 You are already checked in to the active support team💼",
-                      colour=0xff0000)
-                await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
     
@@ -306,7 +334,7 @@ class support_team_button(discord.ui.View):
 
                 support_update_check_out(json_path=json_path_support, user_id=interaction.user.id, timestamp=timestemp)
                 
-                text = support_dashboard_text(json_path, interaction.guild.members, aktiv_support_team_role, support_team_role)
+                text = support_dashboard_text(json_path_ticket, interaction.guild.members, aktiv_support_team_role, support_team_role)
                 embed = discord.Embed(title="💼 Support Team - Dashboard 💼",
                                     description=text,
                                     colour=0xffffff)
@@ -329,11 +357,18 @@ class ticket_button(discord.ui.View):
 
         user = interaction.user
         user_id = interaction.user.id
-        data = read_json_file(json_path)
+        data = read_json_file(json_path_ticket)
 
         guild_id = read_config(config_dir,"client", "guild_id", "int")
+        key = find_key_by_user_id(data, user_id)
+        
+        if key == None:
+            ticket_status = None
+        else:
+            ticket_status = data[key]["ticket_status"]
 
-        if is_user_id_in_data(data, user_id) == True:
+        if ticket_status == "open" or ticket_status == "claimed":
+
             key = find_key_by_user_id(data, user_id)
             ticket_channel_id = data[key]["ticket_channel_id"]
             unix_timestemp = data[key]["unix_timestemp"]
@@ -341,14 +376,13 @@ class ticket_button(discord.ui.View):
             embed = discord.Embed(title="You already have a ticket open",
                       description=f"<#{ticket_channel_id}> {discord_time}",
                       colour=0xff0000)
-            await interaction.response.defer(ephemeral=True)
-            await interaction.user.send(embed=embed)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
 
         else:
             text_1 = "Thank you for using our reporting system! To expedite the resolution process, we kindly request you to answer six essential questions before our team addresses your report. If you change your mind, you can cancel the report with !stop, or it will automatically expire after 10 minutes without a response."
             embed = discord.Embed(title="🚨 Report Player 🚨",
                                 description=text_1,
-                                colour=0xf40006)
+                                colour=0xff80ff)
             embed.set_author(name="👮 Your personal support agent👮")
             embed.set_thumbnail(url=thumbnail)
             await interaction.response.defer(ephemeral=True)
@@ -357,12 +391,12 @@ class ticket_button(discord.ui.View):
 
             answers = []
             questions = [
-            "What is the name of the player you are reporting, or do you have a link to their Steam profile?",
-            "Please provide your Steam name or Steam profile link.",
-            "Which server do you want to report the player on?",
-            "What specific actions or behavior are you reporting the player for? Please provide details.",
-            "Do you have any evidence to support your report, such as video recordings, demo, screenshots, or other documentation?",
-            "Is there any additional information you would like to share before our team investigates the matter?"
+            "(1/6) | What is the name of the player you are reporting, or do you have a link to their Steam profile?",
+            "(2/6) | Please provide your Steam name or Steam profile link.",
+            "(3/6) | Which server do you want to report the player on?",
+            "(4/6) | What specific actions or behavior are you reporting the player for? Please provide details.",
+            "(5/6) | Do you have any evidence to support your report, such as video recordings, demo, screenshots, or other documentation?",
+            "(6/6) | Is there any additional information you would like to share before our team investigates the matter?"
         ]
             
             for question in questions:
@@ -375,6 +409,7 @@ class ticket_button(discord.ui.View):
                 try:
                     # Wait for user's response for up to 10 minutes
                     response = await interaction.client.wait_for('message', check=check, timeout=600)
+                    answers.append(response.content)
                 except asyncio.TimeoutError:
                     
                     open_a_ticket_channel_id = read_config(config_dir,"channel", "open_a_ticket_channel_id", "int")
@@ -387,7 +422,7 @@ class ticket_button(discord.ui.View):
                     await interaction.user.send(embed=embed)
                     return
 
-                answers.append(response.content)
+                
 
             ticket_num = len(data)+1        
             ticket_type = "player report"
@@ -403,17 +438,35 @@ class ticket_button(discord.ui.View):
             support_team_role_id = read_config(config_dir,"role", "support_team_role_id", "int")
 
             support_team_role = guild.get_role(support_team_role_id)
+
             role_colour = discord.Color.from_rgb(0, 0, 0)
             ticket_role = await guild.create_role(name=channel_name, colour=role_colour)
+            #ticket_role = discord.utils.get(interaction.guild.roles, name=interaction.channel.name)
             await interaction.user.add_roles(ticket_role)
 
+
             ticket = await interaction.guild.create_text_channel(channel_name, category=category_support)
+
+            embed = discord.Embed(title="Ticket Dashboard",
+                    description="The ticket can be managed here.\n\n**Except for Close, the buttons can only be used by the Support Team.**\n\n> **🔒 Close 🔒**\n> The ticket will be closed and will be archived.\n\n> **🛡️ Claim 🛡️**\n> Only for the support team to claim the ticket for processing.\n\n> **🎧 Need Voice 🎧**\n> A voice channel is created when one is needed for support.",
+                    colour=0x00b0f4)
+            ticket_dashboard = await ticket.send(embed=embed, view=claim_button())
+
             await ticket.set_permissions(guild.default_role, read_messages=False)
             await ticket.set_permissions(ticket_role, send_messages=False, read_messages=True)
-            await ticket.set_permissions(support_team_role, send_messages=False, read_messages=True)
+            await ticket.set_permissions(support_team_role, send_messages=False, read_messages=True,)
             
-            add_new_ticket_data(json_path, ticket_num, ticket_type, user_name, user_id, ticket.id, unix_timestemp, ticket_status)
+            add_new_ticket_data(json_path_ticket, ticket_num, ticket_type, user_name, user_id, ticket.id, unix_timestemp, ticket_status)
             print(f"The channel {ticket.name} was created.")
+            
+            question_protocol_text = ""
+            for i, (question, answer) in enumerate(zip(questions, answers)):
+                question_protocol_text += f"**{question}**\n> {answer}\n\n"
+
+            embed = discord.Embed(title="Question protocol",
+                    description=f"{question_protocol_text}",
+                    colour=0x80ffff)
+            ticket_dashboard = await ticket.send(embed=embed)
 
             
             confirmation_message = "🌟 Thank you for providing the information 🌟"
@@ -440,27 +493,281 @@ class ticket_button(discord.ui.View):
             aktiv_support_team_role_id = read_config(config_dir,"role", "aktiv_support_team_role_id", "int")
             aktiv_support_team_role = discord.utils.get(interaction.guild.roles, id=aktiv_support_team_role_id)
             
-            text = support_dashboard_text(json_path, interaction.guild.members, aktiv_support_team_role, support_team_role)
+            text = support_dashboard_text(json_path_ticket, interaction.guild.members, aktiv_support_team_role, support_team_role)
+            embed = discord.Embed(title="💼 Support Team - Dashboard 💼",
+                                description=text,
+                                colour=0xffffff)
+            await support_team_msg.edit(embed=embed)
+
+            aktiv_support_team_role_id = read_config(config_dir,"role", "aktiv_support_team_role_id", "int")
+            # aktiv_support_team_role = guild.get_role(aktiv_support_team_role_id)
+            discord_time = discord_time_convert(time.time())
+            description=f"<#{ticket.id}>\nType: 🚨 Report Player 🚨\nfrom: <@{user_id}>\nopen: {discord_time}"
+            embed = discord.Embed(title="NEW OPEN Ticket", 
+                    description=description,
+                    colour=0x80ffff)
+
+            for aktive_member_role in aktiv_support_team_role.members:
+                await aktive_member_role.send(embed=embed)
+
+
+
+class claim_button(discord.ui.View):
+    def __init__(self) -> None:
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="🛡️ Claim 🛡️", style=discord.ButtonStyle.success , custom_id="claim")
+    async def claim_ticket(self, interaction: discord.Interaction, Button: discord.ui.Button):
+        thumbnail = "https://raw.githubusercontent.com/NapoII/HyperCarry-Discord-Bot/main/HyperCarry-Discord-Bot/img/iCarry_Avatar.png"
+
+        user = interaction.user
+        user_id = interaction.user.id
+
+        aktiv_support_team_role_id = read_config(config_dir, "role", "aktiv_support_team_role_id", "int")
+        support_team_role_id = read_config(config_dir, "role", "support_team_role_id", "int")
+        support_team_role = discord.utils.get(interaction.guild.roles, id=support_team_role_id)
+        support_team_channel_id = read_config(config_dir, "channel", "support_team_channel_id", "int")
+        support_team_channel =  discord.utils.get(interaction.guild.channels, id=support_team_channel_id)
+
+        support_team_data = read_json_file(json_path_support)
+        json_ticket = read_json_file(json_path_ticket)
+        
+        
+        key = find_key_by_ticket_channel(json_ticket, interaction.channel.id)
+
+        suport_claimed_list = find_user_ids_by_ticket(support_team_data, key)
+        if interaction.user.id in suport_claimed_list:
+                embed = discord.Embed(title="You have claimed the ticket already!",
+                    colour=0xff80ff)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        else:
+            support_team_msg_id = read_config(config_dir, "msg", "support_team_msg_id", "int")
+            support_team_msg = await support_team_channel.fetch_message(support_team_msg_id)
+        
+            user_rols = interaction.user.roles
+            role_list = []
+            for role_id in user_rols:
+                role_list.append(role_id.id)
+                print(f"role_id = {role_id} = {type(role_id)}")
+
+            if aktiv_support_team_role_id not in role_list:
+
+                embed = discord.Embed(title="You can't clam the ticket",
+                        description=f"You are not in the <@&{aktiv_support_team_role_id}>\nGo Cheack in at\n<#{support_team_channel_id}>",
+                        colour=0xff0000)
+                await interaction.response.send_message(embed=embed,ephemeral=True)
+
+            else:
+
+                role_list = []
+                for role in interaction.user.roles:
+                    role_list.append(role.name)
+
+                if interaction.channel.name not in role_list:
+
+                    embed = discord.Embed(title="You have already claimed the ticket",
+                            colour=0xff0000)
+                    await interaction.response.send_message(embed=embed,ephemeral=True)
+
+                else:
+
+                    embed = discord.Embed(title="You have claimed the ticket!",
+                                colour=0xff80ff)
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                    
+
+                    ticket_role = discord.utils.get(interaction.guild.roles, name=interaction.channel.name)
+                    await interaction.user.add_roles(ticket_role)
+
+                    json_support = read_json_file(json_path_support)
+                    support_key = find_last_entry_key(json_support, interaction.user.id)
+                    add_tickt_to_support_data(json_path_support, json_support, support_key, key)
+
+                    update_json(json_path_ticket, str(key), "ticket_status", "claimed", loaded_data=json_ticket)
+
+
+                    support_team_role_id = read_config(config_dir,"role", "support_team_role_id", "int")
+                    support_team_role = discord.utils.get(interaction.guild.roles, id=support_team_role_id)
+                    aktiv_support_team_role_id = read_config(config_dir,"role", "aktiv_support_team_role_id", "int")
+                    aktiv_support_team_role = discord.utils.get(interaction.guild.roles, id=aktiv_support_team_role_id)
+
+                    # support_team_msg_id = read_config(config_dir, "msg", "support_team_msg_id", "int")
+                    # support_team_channel_id = read_config(config_dir, "channel", "support_team_channel_id", "int")
+                    # support_team_channel =  discord.utils.get(interaction.guild.channels, id=support_team_channel_id)
+                    # support_team_msg = await support_team_channel.fetch_message(support_team_msg_id)
+
+                    text = support_dashboard_text(json_path_ticket, interaction.guild.members, aktiv_support_team_role, support_team_role)
+                    embed = discord.Embed(title="💼 Support Team - Dashboard 💼",
+                                        description=text,
+                                        colour=0xffffff)
+                    await support_team_msg.edit(embed=embed)
+
+
+
+    @discord.ui.button(label="🎧 Need Voice 🎧", style=discord.ButtonStyle.primary , custom_id="need_voice")
+    async def need_voice_support(self, interaction: discord.Interaction, Button: discord.ui.Button):
+        thumbnail = "https://raw.githubusercontent.com/NapoII/HyperCarry-Discord-Bot/main/HyperCarry-Discord-Bot/img/iCarry_Avatar.png"
+
+        guild = interaction.guild
+        user = interaction.user
+        user_id = interaction.user.id
+        support_team_role_id = read_config(config_dir,"role", "support_team_role_id", "int")
+        support_team_role = discord.utils.get(interaction.guild.roles, id=support_team_role_id)
+        aktiv_support_team_role_id = read_config(config_dir,"role", "aktiv_support_team_role_id", "int")
+        aktiv_support_team_role = discord.utils.get(interaction.guild.roles, id=aktiv_support_team_role_id)
+
+        role_list = []
+        for role in interaction.user.roles:
+            role_list.append(role.name)
+
+        if interaction.channel.name not in role_list:
+            embed = discord.Embed(title="You do not have the rights to open Voice Support.",
+                description=f"You must first claim the ticket.",
+                colour=0xff0000)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        
+        if  aktiv_support_team_role.name in role_list and interaction.channel.name in role_list:
+
+            category_support_id = read_config(config_dir, "category", "category_support_id", "int")
+            category_support = discord.utils.get(interaction.guild.categories, id=category_support_id)
+
+
+            ticket_role = discord.utils.get(interaction.guild.roles, name=interaction.channel.name)
+            
+            ticket_voice_channel = await interaction.guild.create_voice_channel(interaction.channel.name, category=category_support)
+            await ticket_voice_channel.set_permissions(guild.default_role, read_messages=False)
+            await ticket_voice_channel.set_permissions(ticket_role, send_messages=True, read_messages=True)
+
+            json_ticket = read_json_file(json_path_ticket)
+            key = find_key_by_ticket_channel(json_ticket, interaction.channel.id)
+            user_id = json_ticket[key]["user_id"]
+            ticket_user = await interaction.guild.fetch_member(user_id)
+
+            embed = discord.Embed(title="🎧 New voice channel for your voice support 🎧",
+                    description=f"Use the the voice channel to receive your **support over voice**\n\n<#{ticket_voice_channel.id}>",
+                    colour=0xff80ff)
+            await interaction.response.send_message(embed=embed)
+            try:
+                await interaction.user.move_to(ticket_voice_channel)
+                await ticket_user.move_to(ticket_voice_channel)
+            except:
+                pass
+            await ticket_user.send(embed=embed)
+
+            json_ticket = read_json_file(json_path_ticket)
+            key = find_key_by_ticket_channel(json_ticket, interaction.channel.id)
+            update_json(json_path_ticket, key, "voice_channel_id", ticket_voice_channel.id , loaded_data=json_ticket)
+            update_json(json_path_ticket, key, "ticket_status", "voice support", loaded_data=json_ticket)
+
+            support_team_msg_id = read_config(config_dir, "msg", "support_team_msg_id", "int")
+            support_team_channel_id = read_config(config_dir, "channel", "support_team_channel_id", "int")
+            support_team_channel =  discord.utils.get(interaction.guild.channels, id=support_team_channel_id)
+            support_team_msg = await support_team_channel.fetch_message(support_team_msg_id)
+
+            text = support_dashboard_text(json_path_ticket, interaction.guild.members, aktiv_support_team_role, support_team_role)
+            embed = discord.Embed(title="💼 Support Team - Dashboard 💼",
+                                description=text,
+                                colour=0xffffff)
+            await support_team_msg.edit(embed=embed)
+
+        else:
+            try:
+                embed = discord.Embed(title="🎧 Support Voice chat can only be opened by the support team 🎧",
+                        description=f"If you would like support via voice, ask to your supporter about it.",
+                        colour=0xff80ff)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+            except:
+                pass
+
+
+    @discord.ui.button(label="🔒 Close 🔒", style=discord.ButtonStyle.danger , custom_id="close")
+    async def close_ticket(self, interaction: discord.Interaction, Button: discord.ui.Button):
+        thumbnail = "https://raw.githubusercontent.com/NapoII/HyperCarry-Discord-Bot/main/HyperCarry-Discord-Bot/img/iCarry_Avatar.png"
+
+        user = interaction.user
+        user_id = interaction.user.id
+
+        role_list = []
+        for role in interaction.user.roles:
+            role_list.append(role.name)
+
+
+
+        if interaction.channel.name not in role_list:
+            embed = discord.Embed(title="You do not have the right to close the ticket.",
+                description=f"You must first claim the ticket to close it.",
+                colour=0xff0000)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        else:
+
+            discord_time = discord_time_convert(time.time())
+            embed = discord.Embed(title="🔒 Ticket Closed 🔒",
+                        description=f"The ticket was closed by <@{user_id}>.\n{discord_time}",
+                        colour=0x00b0f4)
+            await interaction.response.edit_message(embed=embed, view=None)
+
+            json_ticket = read_json_file(json_path_ticket)
+
+            ticket_role = discord.utils.get(interaction.guild.roles, name=interaction.channel.name)
+            key = find_key_by_ticket_channel(json_ticket, interaction.channel.id)
+        
+            voice_channel_id = json_ticket[key]["voice_channel_id"]
+            voice_channel = interaction.guild.get_channel(voice_channel_id)
+            
+            print("fdsfsfsdfsdfsdfsdffffffffffffffffffffffffff")
+            print("/n/n")
+            print(f"json_ticket = {json_ticket} = {type(json_ticket)}")
+            print("/n/n")
+            print(f"key = {key} = {type(key)}")
+            print("/n/n")
+            print(f"voice_channel_id = {voice_channel_id} = {type(voice_channel_id)}")
+            print("/n/n")
+
+            await voice_channel.delete()
+
+            update_json(json_path_ticket, key, "ticket_status", "close")
+
+            await ticket_role.delete()
+
+            category_ticket_archiv_id = read_config(config_dir, "category", "category_ticket_archiv_id", "int")
+            category_ticket_archiv = discord.utils.get(interaction.guild.categories, id=category_ticket_archiv_id)
+
+            await interaction.channel.edit(category=category_ticket_archiv)
+
+            # add Ticket msg save extern  <--
+            support_team_role_id = read_config(config_dir,"role", "support_team_role_id", "int")
+            support_team_role = discord.utils.get(interaction.guild.roles, id=support_team_role_id)
+            aktiv_support_team_role_id = read_config(config_dir,"role", "aktiv_support_team_role_id", "int")
+            aktiv_support_team_role = discord.utils.get(interaction.guild.roles, id=aktiv_support_team_role_id)
+
+            support_team_msg_id = read_config(config_dir, "msg", "support_team_msg_id", "int")
+            support_team_channel_id = read_config(config_dir, "channel", "support_team_channel_id", "int")
+            support_team_channel =  discord.utils.get(interaction.guild.channels, id=support_team_channel_id)
+            support_team_msg = await support_team_channel.fetch_message(support_team_msg_id)
+
+
+            text = support_dashboard_text(json_path_ticket, interaction.guild.members, aktiv_support_team_role, support_team_role)
             embed = discord.Embed(title="💼 Support Team - Dashboard 💼",
                                 description=text,
                                 colour=0xffffff)
             await support_team_msg.edit(embed=embed)
 
 
+
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(ticket_system_setup(bot), guild=discord.Object(guild_id))
     bot.add_view(ticket_button())
     bot.add_view(support_team_button())
- 
+    bot.add_view(claim_button())
 
-
-
-
-"""        text_2 = "What is the name of the player you are reporting, or do you have a link to their Steam profile?"
-        text_3 = "Please provide your Steam name or Steam profile link."
-        text_4 = "Which server do you want to report the player on?"
-        text_5 = "What specific actions or behavior are you reporting the player for? Please provide details."
-        text_6 = "Do you have any evidence to support your report, such as video recordings, demo, screenshots, or other documentation?"
-        text_7 = "Is there any additional information you would like to share before our team investigates the matter?"
-"""
-
+"""     
+print("\n")
+print( "= {} = {}")
+print("\n")
+        
+        
+        """

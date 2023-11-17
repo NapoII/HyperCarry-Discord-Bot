@@ -1,20 +1,14 @@
 {
-  "1700087483.6131356": {
-    "user_name": "rotion",
-    "user_id": 314094103459528705,
-    "claimed_ticks": [],
-    "check_out": 1700087505.119923
+  "1700247953.2274103":{
+    "user_name":"napo_ii",
+    "user_id":189025602236448778,
+    "claimed_tickets":[],
+    "check_out":1700248086.1674297
   },
-  "1700087515.6590674": {
-    "user_name": "rotion",
-    "user_id": 314094103459528705,
-    "claimed_ticks": [],
-    "check_out": 1700087523.0968168
-  },
-  "1700087532.1329563": {
-    "user_name": "rotion",
-    "user_id": 314094103459528705,
-    "claimed_ticks": [],
-    "check_out": 1700087592.6615143
+  "1700248089.4461277":{
+    "user_name":"napo_ii",
+    "user_id":189025602236448778,
+    "claimed_tickets":[],
+    "check_out":""
   }
 }

@@ -143,6 +143,8 @@ class channelHoper(commands.Cog):
             channel_id = get_channel_id_from(user_id, json_path)
             channel = self.bot.get_channel(channel_id)
 
+            
+
             embed = discord.Embed(title="You already have a voice channel",
                       description=f"""> Only one voice channel per user.\n> I moved you into the channel.
                       

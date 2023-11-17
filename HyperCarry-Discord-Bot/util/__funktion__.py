@@ -617,6 +617,7 @@ def add_new_ticket_data(json_path, key, type, user_name, user_id, ticket_channel
             "user_name": user_name,
             "user_id": user_id,
             "ticket_channel_id": ticket_channel_id,
+            "voice_channel_id": "",
             "unix_timestemp": time_stemp,
             "ticket_status": ticket_status
         }
@@ -634,7 +635,7 @@ def support_entry_in_data(json_path, login_unix_time, user_name, user_id):
     datensatz[login_unix_time] = {
         "user_name": user_name,
         "user_id": user_id,
-        "claimed_ticks": [],
+        "claimed_tickets": [],
         "check_out": ""
     }
 
@@ -675,13 +676,13 @@ def find_open_tickets_keys(json_path=None, data=None):
     open_tickets = []
     for key, value in data.items():
 
-        if "ticket_status" in value and (value["ticket_status"] == "open" or value["ticket_status"] == "claim"):
+        if "ticket_status" in value and (value["ticket_status"] == "open" or value["ticket_status"] == "claimed" or value["ticket_status"] =="voice support"):
             open_tickets.append(key)
 
     return open_tickets
 
 
-def support_dashboard_text(json_path, interaction_guild_members, aktiv_support_team_role, support_team_role):
+def support_dashboard_text(json_path_ticket, interaction_guild_members, aktiv_support_team_role, support_team_role):
     """
     interaction_guild_members = interaction.guild.members
     """
@@ -700,8 +701,9 @@ def support_dashboard_text(json_path, interaction_guild_members, aktiv_support_t
     for id in pasive_support_users:
         pasiv_supporter_str = pasiv_supporter_str + f"<@{id}>\n"
 
-    data = read_json_file(json_path)
-    open_tickets_key = find_open_tickets_keys( data=data)
+    data = read_json_file(json_path_ticket)
+    open_tickets_key = find_open_tickets_keys(data=data)
+
 
     open_ticket_str = ""
     for key in open_tickets_key:
@@ -744,3 +746,71 @@ def is_user_id_in_data(json_data, target_user_id):
         if "user_id" in value and value["user_id"] == target_user_id:
             return True
     return False
+
+
+def update_json(json_path, key, target_item, new_value, loaded_data=None):
+    if loaded_data is None:
+        with open(json_path, 'r') as file:
+            json_data = json.load(file)
+    else:
+        json_data = loaded_data
+
+    if key in json_data:
+        if target_item in json_data[key]:
+            json_data[key][target_item] = new_value
+            print(f"update -> json_data[{key}][{target_item}] = {new_value}")
+        else:
+            print(f'The element {target_item} was not found in the key {key}')
+    else:
+        print(f'The key {key} was not found in the JSON')
+        
+    with open(json_path, 'w') as file:
+        json.dump(json_data, file, indent=2)
+
+
+def find_last_entry_key(json_data, user_id):
+    # Lade den JSON-Datensatz
+    # Durchsuche den Datensatz rückwärts nach der angegebenen user_id
+    for key in reversed(sorted(json_data.keys())):
+        entry = json_data[key]
+        if entry["user_id"] == user_id:
+            # Gib den Schlüssel (key) und den Eintrag zurück
+            return key
+
+    # Gib None zurück, wenn die user_id nicht gefunden wurde
+    return None, None
+
+
+def add_tickt_to_support_data(json_path, json_data, key, ticket_num):
+    if key in json_data:
+        json_data[key]["claimed_tickets"].append(ticket_num)
+
+        try:
+            with open(json_path, 'w') as file:
+                json.dump(json_data, file, indent=2)
+            print(f"Ticket {ticket_num} was successfully added.")
+        except IOError as e:
+            print(f"Error when writing the file {json_path}: {e}")
+    else:
+        print(f"The specified key '{key}' was not found in the JSON data set.")
+
+
+def find_user_ids_by_ticket(json_data, ticket_num):
+    user_ids = []
+
+    for timestamp, data in json_data.items():
+        claimed_tickets = data.get("claimed_tickets", [])
+
+        if ticket_num in claimed_tickets:
+            user_ids.append(data["user_id"])
+
+    return user_ids
+
+
+def find_key_by_ticket_channel(ticket_data, target_ticket_channel_id):
+    for key, value in ticket_data.items():
+        if "ticket_channel_id" in value and value["ticket_channel_id"] == target_ticket_channel_id:
+            return key
+    return None
+
+
