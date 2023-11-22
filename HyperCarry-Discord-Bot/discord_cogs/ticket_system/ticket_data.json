@@ -1,11 +1,11 @@
 {
   "1": {
     "type": "player report",
-    "user_name": "napo_ii",
+    "user_name": "Napo",
     "user_id": 189025602236448778,
-    "ticket_channel_id": 1175149869552377957,
-    "voice_channel_id": 1175149894743379979,
-    "unix_timestemp": 1700247968.3345947,
-    "ticket_status": "close"
+    "ticket_channel_id": 1176945130620588184,
+    "voice_channel_id": "",
+    "unix_timestemp": 1700676004.0505612,
+    "ticket_status": "open"
   }
 }

@@ -1,0 +1,23 @@
+{
+  "1": {
+    "server_name": "HyperCarry Community #7 Deagle HS only CS2",
+    "server_address": "213.239.210.121:27070",
+    "channel_name_id": 1176926777688477779,
+    "channel_stats_id": 1176926779391365241,
+    "server_msg_id": 1176926780402180136
+  },
+  "2": {
+    "server_name": "HyperCarry Community #2 Real GunGame CS2",
+    "server_address": "213.239.210.121:27020",
+    "channel_name_id": 1176927804298895391,
+    "channel_stats_id": 1176927805452329080,
+    "server_msg_id": 1176927806387671140
+  },
+  "3": {
+    "server_name": "HyperCarry Community #3 Real GunGame CS2",
+    "server_address": "213.239.210.121:27030",
+    "channel_name_id": 1176931387522175026,
+    "channel_stats_id": 1176931388671393932,
+    "server_msg_id": 1176931389623500902
+  }
+}

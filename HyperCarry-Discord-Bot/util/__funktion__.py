@@ -13,7 +13,7 @@ Here is the code:
 
 
 """
-
+import requests
 import json
 import os
 from configparser import ConfigParser
@@ -715,11 +715,11 @@ def support_dashboard_text(json_path_ticket, interaction_guild_members, aktiv_su
         discord_time = discord_time_convert(unix_timestemp)
         open_ticket_str = open_ticket_str + f"> **{ticket_status}** **-** <#{ticket_channel_id}> **-** <@{user_id}> **-** **{type}** **-** {discord_time}\n\n"
 
-    text = f"""**Support Cheack In**
-    _Cheack In as active and receive notifications for open tickets._
+    text = f"""**Support Check In**
+    _Check In as active and receive notifications for open tickets._
     
-    **Support Cheack Out**
-    _Cheack Out as active and do not receive notifications for open tickets._
+    **Support Check Out**
+    _Check Out as active and do not receive notifications for open tickets._
     
     **Aktive  Supporter:**
     {aktive_supporter_str}
@@ -814,3 +814,46 @@ def find_key_by_ticket_channel(ticket_data, target_ticket_channel_id):
     return None
 
 
+
+def get_server_data(api_key, filter_param):
+    url = "https://api.steampowered.com/IGameServersService/GetServerList/v1/"
+    params = {
+        'key': api_key,
+        'filter': f"addr\\{filter_param}"
+    }
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()  # Raise an exception for 4xx and 5xx status codes
+
+        data = response.json()
+        return data
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error: {e}")
+        return None
+    
+
+def add_server_data(json_path, server_address, server_name, channel_name_id, channel_stats_id, server_msg_id):
+    # Read the existing JSON data
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    # Find the highest existing key
+    max_key = max(map(int, data.keys())) if data else 0
+
+    # Create a new key (one higher than the highest existing key)
+    new_key = str(max_key + 1)
+
+    # Add the new entry
+    data[new_key] = {
+        "server_name": server_name,
+        "server_address": server_address,
+        "channel_name_id": channel_name_id,
+        "channel_stats_id" : channel_stats_id,
+        "server_msg_id": server_msg_id
+    }
+
+    # Update the JSON data
+    with open(json_path, 'w') as file:
+        json.dump(data, file, indent=2)

@@ -1,7 +1,6 @@
 """Full Doku on: https://github.com/NapoII/Discord_Rust_Team_bot"
 -----------------------------------------------
-This COG is for embed a help information for Rust.
-exampel : cctv codes
+This cog creates automatic voice channels when the user needs them. And the user can manage them.
 ------------------------------------------------
 """
 
@@ -43,7 +42,6 @@ if category_private_voice_id == None:
     category_private_voice_id = 1
 
 #channel_name_list = ["Airfield", "Bandit Camp", "Harbor", "Junkyard","Large Oil Rig","Launch Site","Lighthouse","Military Tunnels","Oil Rig","Outpost","Mining Outpost","Power Plant","Sewer Branch","Satellite Dish Array","The Dome","Train Yard","Train Tunnel Network","Water Treatment Plant"]
-
 
 class channelHoper_setup(commands.Cog):
     def __init__(self, bot):
@@ -143,8 +141,6 @@ class channelHoper(commands.Cog):
             channel_id = get_channel_id_from(user_id, json_path)
             channel = self.bot.get_channel(channel_id)
 
-            
-
             embed = discord.Embed(title="You already have a voice channel",
                       description=f"""> Only one voice channel per user.\n> I moved you into the channel.
                       
@@ -186,7 +182,6 @@ class channelHoper(commands.Cog):
             stay = get_item_from_channel("stay", new_channel.id, data)
             hide = get_item_from_channel("hide", new_channel.id, data)
 
-
             embed = discord.Embed(title=f"<#{new_channel.id}>",
                                 description=f"<@{owner.id}>, is the owner of this Voice Channel\nThe following User have admin rights on this channel:\n{admin_text}\n",
                                 colour=0x00b0f4)
@@ -218,7 +213,6 @@ class channelHoper(commands.Cog):
             await new_channel.send(embed=help_embed)
 
             self.voice_channels[new_channel.id] = user.id
-
 
 
 
@@ -293,7 +287,6 @@ class bot_vc_rename(commands.Cog):
             msg = await interaction.response.send_message(embed=embed, ephemeral=True,)
 
 
-
             channel_msg_id = get_item_from_channel("channel_msg_id", target_channel_id, json_path)
             channel_msg = await interaction.channel.fetch_message(channel_msg_id)
 
@@ -345,7 +338,6 @@ class bot_vc_rename(commands.Cog):
                                         <#{create_channel_id}>""", color=0xff0000)
                 embed.set_thumbnail(url="https://i.imgur.com/LFG51bE.png")
                 msg = await interaction.response.send_message(embed=embed, ephemeral=True,)
-
 
 
             else:
@@ -449,7 +441,6 @@ class bot_vc_limit(commands.Cog):
                 msg = await interaction.response.send_message(embed=embed, ephemeral=True,)
 
 
-
             else:
                 channel_id_list = get_list_for_all_admin_server_from_user(interaction_user_id,json_path)
                 channel_id_list_len = len(channel_id_list)
@@ -468,7 +459,6 @@ write the command in the desired channel.""", color=0xff0000)
                 msg = await interaction.response.send_message(embed=embed, ephemeral=True,)
 
 
-
 class bot_vc_stay(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
@@ -485,7 +475,6 @@ class bot_vc_stay(commands.Cog):
             channel_id = get_channel_id_from(interaction_user_id, json_path)
             channel = self.bot.get_channel(channel_id)
 
-            
 
             new_stay_status = switch_stay_status(channel_id, json_path)
             if new_stay_status == True:
@@ -572,7 +561,6 @@ write the command in the desired channel.""", color=0xff0000)
                 msg = await interaction.response.send_message(embed=embed, ephemeral=True,)
 
 
-
 class bot_vc_kick(commands.Cog):
     def __init__(self, bot: commands.Bot, interaction: discord.Interaction) -> None:
         self.bot = bot
@@ -590,7 +578,6 @@ class bot_vc_kick(commands.Cog):
     async def choisecolor(self, interaction: discord.Interaction, player_to_kick: discord.app_commands.Choice[int]):
         # code for kick the user.id ....
         await interaction.response.send_message(f"test {player_to_kick.name}")                                                                                                                                                  
-
 
 
 class bot_vc_help(commands.Cog):
@@ -630,7 +617,6 @@ class bot_vc_help(commands.Cog):
             msg = await interaction.response.send_message(embed=embed, ephemeral=True)
         except:
             pass
-
 
 
 async def setup(bot: commands.Bot):

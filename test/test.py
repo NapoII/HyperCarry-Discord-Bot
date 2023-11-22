@@ -251,30 +251,20 @@ def find_key_by_ticket_channel(ticket_data, target_ticket_channel_id):
             return key
     return None
 
-x = find_key_by_ticket_channel(ticket_data, 1174802850354831512)
 
 
-def update_json(json_path, key, target_item, new_value, loaded_data=None):
-    if loaded_data is None:
-        with open(json_path, 'r') as file:
-            json_data = json.load(file)
-    else:
-        json_data = loaded_data
-
-    if key in json_data:
-        if target_item in json_data[key]:
-            json_data[key][target_item] = new_value
-        else:
-            print(f'The element {target_item} was not found in the key {key}').
-    else:
-        print(f'The key {key} was not found in the JSON')
 
 
     with open(json_path, 'w') as file:
         json.dump(json_data, file, indent=2)
 
 
-json_path = r"E:\Pr0grame\My_ Pyhton\work_in_progress\HyperCarry-Discord-Bot\HyperCarry-Discord-Bot\discord_cogs\ticket_system\ticket_data.json"
-data = read_json_file(json_path)
+text = ""
+list_of_hiden_commands = ["/add_server", "/delt_server"]
+for hide_command in list_of_hiden_commands:
+    text = text + f" - `{hide_command}`\n"
 
-update_json(json_path, "1", "ticket_status", "test", loaded_data=data)
+bot_admin_role = 12344
+description=f"```Server settings > Intergation > Bot > Set commands ```\nThat only the Users with the Role <@&{bot_admin_role}>\ncan see/use the commands:\n\n{text}"
+
+print(description)

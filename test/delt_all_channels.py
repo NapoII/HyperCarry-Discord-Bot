@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import pyautogui
-token = "MTE3MjAxNzY1MjY1MTI2NjE0MA.GXoc7p.5Wueq1di7erWs6UYoBwXAaHZ7mHneCL1iSYHbw"
+token = "MTE3MjAxNzY1MjY1MTI2NjE0MA.G2h93N.3WZA-_stFFRqJ9S2FKFH6-tMpS4q1dMwT0D5nM"
 SERVER_ID = '1103399447100133386'
 
 1173923194235785286
@@ -27,8 +27,6 @@ async def on_ready():
         if server:
             
             channel_list = [channel.id for channel in server.channels]
-            print('channel-IDs:', channel_list)
-            print("\n")
             channel_list_len = len(channel_list)
             x = -1
             while True:
@@ -36,11 +34,19 @@ async def on_ready():
                 if x == channel_list_len:
                     break
                 channel = bot.get_channel(channel_list[x])
-                await bot.get_channel(channel_list[x]).delete()
+                await bot.get_channel(channel_list[x]).delete(reason = "for test restart")
 
                 print(f"-->> delt: {channel.name} - #{channel_list[x]}")
-        
-            
+
+
+            roles_list = server.roles
+            for role in roles_list:
+                try:
+                    await role.delete()
+                    print(f"-->> deleted: {role.name} - #{role.id}")
+                except Exception as e:
+                    print(f"Failed to delete role {role.name}: {e}")
+                    
         else:
             print(f'Server mit ID {SERVER_ID} nicht gefunden')
     else:
