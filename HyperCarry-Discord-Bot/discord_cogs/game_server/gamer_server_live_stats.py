@@ -40,10 +40,8 @@ if guild_id == None:
 class server_stats_system_setup(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.config_dir = config_dir  # Beispiel-Konfigurationsverzeichnis
+        self.config_dir = config_dir 
 
-
-        # Hier wird die Methode beim Start des Bots aufgerufen
         self.bot.loop.create_task(self.setup_ticket_system())
 
     async def setup_ticket_system(self):
@@ -235,13 +233,12 @@ class server_stat_loops(commands.Cog, commands.Bot):
         
         self.myLoop.start(bot)
 
-    @tasks.loop(seconds=120)  # repeat after every 10 seconds
+    @tasks.loop(seconds=240)  # repeat after every 10 seconds
     async def myLoop(self, bot):
         await self.bot.wait_until_ready()
         guild = self.bot.get_guild(guild_id)
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print(f"Game Server Routine: {current_time}")
-
 
 
         data = read_json_file(json_path_server_channel_data)
@@ -301,24 +298,6 @@ class server_stat_loops(commands.Cog, commands.Bot):
                 print(server_data)
                 print("\n")
 
-        
-#buttons
-class join_button(discord.ui.View):
-    def __init__(self):
-        super().__init__()
-        self.value = None
-
-    # When the confirm button is pressed, set the inner value to `True` and
-    # stop the View from listening to more input.
-    # We also send the user an ephemeral message that we're confirming their choice.
-    @discord.ui.button(label='Join Server', style=discord.ButtonStyle.green)
-    async def join_server(self, interaction: discord.Interaction, button: discord.ui.Button, ):
-        await interaction.response.send_message('Confirming', ephemeral=True)
-        print(f"Send Confrim / Cancel query.")
-
-        self.value = True
-        self.stop()
-
 
 # Confirm buttons
 class Confirm_say(discord.ui.View):
@@ -350,5 +329,3 @@ async def setup(bot: commands.Bot):
     await bot.add_cog(server_stats_system_setup(bot), guild=discord.Object(guild_id))
     await bot.add_cog(server_stat_loops(bot), guild=discord.Object(guild_id))
     await bot.add_cog(bot_server_add(bot), guild=discord.Object(guild_id))
-
-

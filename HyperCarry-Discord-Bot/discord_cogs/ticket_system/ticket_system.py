@@ -34,16 +34,15 @@ if guild_id == None:
 class ticket_system_setup(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.config_dir = config_dir  # Beispiel-Konfigurationsverzeichnis
+        self.config_dir = config_dir
 
 
-        # Hier wird die Methode beim Start des Bots aufgerufen
         self.bot.loop.create_task(self.setup_ticket_system())
 
     async def setup_ticket_system(self):
         print ("\n --> setup_ticket_system\n")
-        await self.bot.wait_until_ready()  # Warte, bis der Bot vollständig gestartet ist
-        guild = self.bot.get_guild(guild_id)  # Ersetze YOUR_GUILD_ID durch die tatsächliche Guild-ID
+        await self.bot.wait_until_ready()
+        guild = self.bot.get_guild(guild_id)
 
 
         was_created_list = []
@@ -102,7 +101,6 @@ class ticket_system_setup(commands.Cog):
             write_config(config_dir, "category","category_support_id", category_support_id)
 
             was_created_list.append(category_support)
-
 
 
 # Creates a new text channel
@@ -1040,7 +1038,7 @@ class claim_button(discord.ui.View):
                 for role in interaction.user.roles:
                     role_list.append(role.name)
 
-                if interaction.channel.name not in role_list:
+                if interaction.channel.name in role_list:
 
                     embed = discord.Embed(title="You have already claimed the ticket",
                             colour=0xff0000)
@@ -1106,47 +1104,62 @@ class claim_button(discord.ui.View):
         
         if  aktiv_support_team_role.name in role_list and interaction.channel.name in role_list:
 
-            category_support_id = read_config(config_dir, "category", "category_support_id", "int")
-            category_support = discord.utils.get(interaction.guild.categories, id=category_support_id)
+            all_voice_channel_names = []
+            all_voice_channels = interaction.guild.voice_channels
+            for voice_c in all_voice_channels:
+                all_voice_channel_names.append(voice_c.name)
+
+            if interaction.channel.name not in all_voice_channel_names:
+
+                category_support_id = read_config(config_dir, "category", "category_support_id", "int")
+                category_support = discord.utils.get(interaction.guild.categories, id=category_support_id)
 
 
-            ticket_role = discord.utils.get(interaction.guild.roles, name=interaction.channel.name)
+                ticket_role = discord.utils.get(interaction.guild.roles, name=interaction.channel.name)
+                
+                ticket_voice_channel = await interaction.guild.create_voice_channel(interaction.channel.name, category=category_support)
+                await ticket_voice_channel.set_permissions(guild.default_role, read_messages=False)
+                await ticket_voice_channel.set_permissions(ticket_role, send_messages=True, read_messages=True)
+
+                json_ticket = read_json_file(json_path_ticket)
+                key = find_key_by_ticket_channel(json_ticket, interaction.channel.id)
+                user_id = json_ticket[key]["user_id"]
+                ticket_user = await interaction.guild.fetch_member(user_id)
+
+                embed = discord.Embed(title="🎧 New voice channel for your voice support 🎧",
+                        description=f"Use the the voice channel to receive your **support over voice**\n\n<#{ticket_voice_channel.id}>",
+                        colour=0xff80ff)
+                await interaction.response.send_message(embed=embed)
+                try:
+                    await interaction.user.move_to(ticket_voice_channel)
+                    await ticket_user.move_to(ticket_voice_channel)
+                except:
+                    pass
+                await ticket_user.send(embed=embed)
+
+                json_ticket = read_json_file(json_path_ticket)
+                key = find_key_by_ticket_channel(json_ticket, interaction.channel.id)
+                update_json(json_path_ticket, key, "voice_channel_id", ticket_voice_channel.id , loaded_data=json_ticket)
+                update_json(json_path_ticket, key, "ticket_status", "voice support", loaded_data=json_ticket)
+
+                support_team_msg_id = read_config(config_dir, "msg", "support_team_msg_id", "int")
+                support_team_channel_id = read_config(config_dir, "channel", "support_team_channel_id", "int")
+                support_team_channel =  discord.utils.get(interaction.guild.channels, id=support_team_channel_id)
+                support_team_msg = await support_team_channel.fetch_message(support_team_msg_id)
+
+                text = support_dashboard_text(json_path_ticket, interaction.guild.members, aktiv_support_team_role, support_team_role)
+                embed = discord.Embed(title="💼 Support Team - Dashboard 💼",
+                                    description=text,
+                                    colour=0xffffff)
+                await support_team_msg.edit(embed=embed)
             
-            ticket_voice_channel = await interaction.guild.create_voice_channel(interaction.channel.name, category=category_support)
-            await ticket_voice_channel.set_permissions(guild.default_role, read_messages=False)
-            await ticket_voice_channel.set_permissions(ticket_role, send_messages=True, read_messages=True)
+            else:
 
-            json_ticket = read_json_file(json_path_ticket)
-            key = find_key_by_ticket_channel(json_ticket, interaction.channel.id)
-            user_id = json_ticket[key]["user_id"]
-            ticket_user = await interaction.guild.fetch_member(user_id)
+                voice_support_channel = discord.utils.get(interaction.guild.voice_channels, name=interaction.channel.name)
+                embed = discord.Embed(description=f"A voice channel already exists \n<#{voice_support_channel.id}>")
+                await interaction.response.send_message(embed=embed, ephemeral=True)
 
-            embed = discord.Embed(title="🎧 New voice channel for your voice support 🎧",
-                    description=f"Use the the voice channel to receive your **support over voice**\n\n<#{ticket_voice_channel.id}>",
-                    colour=0xff80ff)
-            await interaction.response.send_message(embed=embed)
-            try:
-                await interaction.user.move_to(ticket_voice_channel)
-                await ticket_user.move_to(ticket_voice_channel)
-            except:
-                pass
-            await ticket_user.send(embed=embed)
-
-            json_ticket = read_json_file(json_path_ticket)
-            key = find_key_by_ticket_channel(json_ticket, interaction.channel.id)
-            update_json(json_path_ticket, key, "voice_channel_id", ticket_voice_channel.id , loaded_data=json_ticket)
-            update_json(json_path_ticket, key, "ticket_status", "voice support", loaded_data=json_ticket)
-
-            support_team_msg_id = read_config(config_dir, "msg", "support_team_msg_id", "int")
-            support_team_channel_id = read_config(config_dir, "channel", "support_team_channel_id", "int")
-            support_team_channel =  discord.utils.get(interaction.guild.channels, id=support_team_channel_id)
-            support_team_msg = await support_team_channel.fetch_message(support_team_msg_id)
-
-            text = support_dashboard_text(json_path_ticket, interaction.guild.members, aktiv_support_team_role, support_team_role)
-            embed = discord.Embed(title="💼 Support Team - Dashboard 💼",
-                                description=text,
-                                colour=0xffffff)
-            await support_team_msg.edit(embed=embed)
+            
 
         else:
             try:

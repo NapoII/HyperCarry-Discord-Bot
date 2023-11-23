@@ -5,7 +5,6 @@ Discord Community Bot with the feat:
             - Auto Voice channel System
             - User Pic his role System
 
-To do: add_new_game for role pick command
 https://discord.com/developers
 https://embed.dan.onl/
 ------------------------------------------------
@@ -71,7 +70,7 @@ class MyBot(commands.Bot):
             "discord_cogs.ticket_system.ticket_system",
             "discord_cogs.channel_hopper.channel_hopper",
             "discord_cogs.pick_a_role.pick_a_role",
-            "discord_cogs.game_server.discord_gameserver_struk"
+            "discord_cogs.game_server.gamer_server_live_stats"
         ]
 
     async def setup_hook(self):
@@ -84,8 +83,9 @@ class MyBot(commands.Bot):
     async def on_ready(self):
         guild = self.get_guild(guild_id)  # Access guild from the class attribute
         text = f"\n\nThe Bot: [ {self.user} | ID:{self.user.id} ] is connected to [{guild.name}] id: [{guild.id}]\nActivity_text:[{activity_text}]\n\n📶 Bot is Online and Rdy to Run... 📶 \n"
-        print(str(text))
-        print('------')
+        print(text)
+        text_len = len(text)
+        print(text_len*"-")
 
         print(f'Logged in as {self.user} (ID: {self.user.id})')
 
