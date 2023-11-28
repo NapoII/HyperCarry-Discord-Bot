@@ -233,13 +233,23 @@ class server_stat_loops(commands.Cog, commands.Bot):
         
         self.myLoop.start(bot)
 
-    @tasks.loop(seconds=240)  # repeat after every 10 seconds
+    @tasks.loop(seconds=160)  # repeat after every 10 seconds #240
     async def myLoop(self, bot):
         await self.bot.wait_until_ready()
         guild = self.bot.get_guild(guild_id)
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print(f"Game Server Routine: {current_time}")
 
+
+        all_game_servers_channel_id = read_config(config_dir,"channel", "all_game_servers_channel_id", "int")
+        all_game_servers_channel = discord.utils.get(guild.text_channels, id=all_game_servers_channel_id)
+            
+        if all_game_servers_channel == None:
+            channel_name = "🌎-server-list"
+
+            all_game_servers_channel = await guild.create_text_channel(channel_name, category=category_servers)
+            write_config(config_dir, "channel", "all_game_servers_channel_id", all_game_servers_channel.id)
+            
 
         data = read_json_file(json_path_server_channel_data)
         for key in data:
@@ -248,17 +258,42 @@ class server_stat_loops(commands.Cog, commands.Bot):
             server_data = get_server_data(steam_token, server_address)
 
             server_msg_id = data[key]["server_msg_id"]
-
-            all_game_servers_channel_id = read_config(config_dir,"channel", "all_game_servers_channel_id", "int")
-            all_game_servers_channel = discord.utils.get(guild.text_channels, id=all_game_servers_channel_id)
-
-            server_msg = await all_game_servers_channel.fetch_message(server_msg_id)
-
+            channel_name_id = data[key]["channel_name_id"]
             channel_stats_id = data[key]["channel_stats_id"]
-            channel_stats = guild.get_channel(channel_stats_id)
-        
-            # channel_name_id = data[key]["channel_name_id"]
-            # channel_name = guild.get_channel(channel_name_id)
+            channel_stats_id = data[key]["channel_stats_id"]
+
+            server_name = data[key]["server_name"]
+
+            channel_name = discord.utils.get(guild.voice_channels, id=channel_name_id)
+            channel_stats = discord.utils.get(guild.voice_channels, id=channel_stats_id)
+
+            if channel_name == None or channel_stats == None:
+
+                try:
+                    await channel_name.delete()
+                except:
+                    pass
+
+                try:
+                    await channel_stats.delete()
+                except:
+                    pass
+
+                category_servers_id = read_config(config_dir,"category", "category_servers_id", "int")
+                category_servers = discord.utils.get(guild.categories, id=category_servers_id)
+                channel_name = await guild.create_voice_channel(name=server_name, category=category_servers, overwrites={guild.default_role: discord.PermissionOverwrite(connect=False)})
+                channel_stats = await guild.create_voice_channel(name="Placeholder Server stats", category=category_servers, overwrites={guild.default_role: discord.PermissionOverwrite(connect=False)})
+
+                update_json(json_path_server_channel_data, key, "channel_name_id", channel_name.id, loaded_data=data)
+                update_json(json_path_server_channel_data, key, "channel_stats_id", channel_stats.id, loaded_data=data)
+
+
+            try:
+                server_msg = await all_game_servers_channel.fetch_message(server_msg_id)
+            except:
+                embed = discord.Embed(title="Placeholder up to the next server Discord routine", description="Wait for next routine update in 1 min")
+                server_msg = await all_game_servers_channel.send(embed=embed)
+                update_json(json_path_server_channel_data, key, "server_msg_id", server_msg.id, loaded_data=data)
 
             try: 
                 name = server_data["response"]["servers"][0]["name"]

@@ -1,2 +1,6 @@
 logNow
 configparser
+discord
+requests
+json
+shutil

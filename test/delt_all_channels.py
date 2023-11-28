@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import pyautogui
-token = "MTE3MjAxNzY1MjY1MTI2NjE0MA.G2h93N.3WZA-_stFFRqJ9S2FKFH6-tMpS4q1dMwT0D5nM"
+token = ""
 SERVER_ID = '1103399447100133386'
 
 1173923194235785286
