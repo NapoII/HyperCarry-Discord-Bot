@@ -602,7 +602,7 @@ def find_user_id_occurrences(data_set, target_user_id):
     return matching_keys
 
 
-def add_new_ticket_data(json_path, key, type, user_name, user_id, ticket_channel_id, time_stemp, ticket_status):
+def add_new_ticket_data(json_path, key, type, user_name, user_id, ticket_channel_id, ticket_role_id, time_stemp, ticket_status):
     # Load existing data from the JSON file
     with open(json_path, 'r') as file:
         data = json.load(file)
@@ -618,6 +618,7 @@ def add_new_ticket_data(json_path, key, type, user_name, user_id, ticket_channel
             "user_id": user_id,
             "ticket_channel_id": ticket_channel_id,
             "voice_channel_id": "",
+            "ticket_role_id": ticket_role_id,
             "unix_timestemp": time_stemp,
             "ticket_status": ticket_status
         }
@@ -827,6 +828,7 @@ def get_server_data(api_key, filter_param):
         response.raise_for_status()  # Raise an exception for 4xx and 5xx status codes
 
         data = response.json()
+        time.sleep(1.5)
         return data
 
     except requests.exceptions.RequestException as e:
@@ -850,10 +852,45 @@ def add_server_data(json_path, server_address, server_name, channel_name_id, cha
         "server_name": server_name,
         "server_address": server_address,
         "channel_name_id": channel_name_id,
-        "channel_stats_id" : channel_stats_id,
-        "server_msg_id": server_msg_id
+        "channel_stats_id" : channel_stats_id
     }
 
     # Update the JSON data
     with open(json_path, 'w') as file:
         json.dump(data, file, indent=2)
+
+
+def check_ip_in_data(json_path, ip):
+    # Laden Sie das JSON-Dataset aus der angegebenen Datei
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    # Durchsuchen des Datasets nach der angegebenen IP-Adresse
+    for key, server_info in data.items():
+        if server_info["server_address"] == ip:
+            return key  # Rückgabe des Schlüssels, wenn die IP gefunden wurde
+
+    # Rückgabe von False, wenn die IP nicht gefunden wurde
+    return False
+
+
+def get_server_addresses(json_path):
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    server_addresses = [entry["server_address"] for entry in data.values()]
+    return server_addresses
+
+
+def delete_entry(json_path, key):
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    if key in data:
+        del data[key]
+        with open(json_path, 'w') as file:
+            json.dump(data, file, indent=2)
+        print(f"Entry with the key '{key}' was successfully deleted.")
+
+    else:
+        print(f"Entry with the key '{key}' was not found.")

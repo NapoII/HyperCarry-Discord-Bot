@@ -65,12 +65,14 @@ class MyBot(commands.Bot):
             application_id=Application_ID,
             activity=activity
         )
+        #"discord_cogs.game_server.gamer_server_live_stats"
         self.initial_extensions = [
             "discord_cogs.admin.pre_setup",
+            "discord_cogs.admin.auto_msg",
             "discord_cogs.ticket_system.ticket_system",
             "discord_cogs.channel_hopper.channel_hopper",
             "discord_cogs.pick_a_role.pick_a_role",
-            "discord_cogs.game_server.gamer_server_live_stats"
+            
         ]
 
     async def setup_hook(self):

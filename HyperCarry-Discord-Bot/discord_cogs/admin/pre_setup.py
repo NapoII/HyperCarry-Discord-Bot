@@ -56,6 +56,20 @@ class server_system_setup(commands.Cog):
         was_created_list = []
 
 
+# Creates a new Role
+        role_name = "🤖-Bot-Admin"
+        role_colour = discord.Color.from_rgb(255,255,255)
+        bot_admin_role_id = read_config(config_dir,"role", "bot_admin_role_id", "int")
+        bot_admin_role = discord.utils.get(guild.roles, id=bot_admin_role_id)
+
+        if bot_admin_role != None:
+            print(f"The role {bot_admin_role.name} already exists.")
+        else:
+            print(f"The role {role_name} does not exist.")
+            bot_admin_role = await guild.create_role(name=role_name, colour=role_colour)
+            print(f"The role {bot_admin_role.name} was created.")
+            write_config(config_dir, "role", "bot_admin_role_id", bot_admin_role.id)
+
 
 # Creates a new category
         category_name = "--------💻 - Admin - 💻--------"
@@ -68,11 +82,16 @@ class server_system_setup(commands.Cog):
         else:
             print(f"The category {category_name} does not yet exist and will now be created")
             overwrites = {
-                guild.default_role: discord.PermissionOverwrite(read_messages=True),  # Everyone can view and join the channel
+                guild.default_role: discord.PermissionOverwrite(read_messages=False, send_messages=False, view_channel=False),  # Everyone can view and join the channel
                 guild.me: discord.PermissionOverwrite(send_messages=True, read_messages=True)  # The bot can send messages, others can only view
             }
-        
+
             category_admin = await guild.create_category(category_name, overwrites=overwrites)
+
+            bot_admin_role_id = read_config(config_dir,"role", "bot_admin_role_id", "int")
+            bot_admin_role = discord.utils.get(guild.roles, id = bot_admin_role_id)
+            await category_admin.set_permissions(bot_admin_role, read_messages=True, send_messages=True)
+
             print(f"The category {category_name} was created.")
             category_admin_name = category_admin.name
             category_admin_id = category_admin.id
@@ -90,7 +109,24 @@ class server_system_setup(commands.Cog):
             print(f"The channel {bot_cmd_channel.name} already exists.")
         else:
             print(f"The channel {bot_cmd_channel_name} does not exist.")
-            bot_cmd_channel = await guild.create_text_channel(bot_cmd_channel_name, category=category_admin)
+
+            category_admin_id = read_config(config_dir, "category", "category_admin_id", "int")
+            category_admin = discord.utils.get(guild.categories, id=category_admin_id)
+
+
+            overwrites = {
+                guild.default_role: discord.PermissionOverwrite(read_messages=False, send_messages=False, view_channel=False),  # Everyone can view and join the channel
+                guild.me: discord.PermissionOverwrite(send_messages=True, read_messages=True)  # The bot can send messages, others can only view
+            }
+
+
+            bot_cmd_channel = await guild.create_text_channel(bot_cmd_channel_name, category=category_admin, overwrites=overwrites)
+            await bot_cmd_channel.set_permissions(guild.default_role, read_messages=False)
+
+            bot_admin_role_id = read_config(config_dir,"role", "bot_admin_role_id", "int")
+            bot_admin_role = discord.utils.get(guild.roles, id = bot_admin_role_id)
+            await bot_cmd_channel.set_permissions(bot_admin_role, read_messages=True, send_messages=True)
+            
             print(f"The channel {bot_cmd_channel.name} was created.")
             write_config(config_dir, "channel", "bot_cmd_channel_id", bot_cmd_channel.id)
 
@@ -104,25 +140,7 @@ class server_system_setup(commands.Cog):
             embed.add_field(name="Attention!",value=embed_text, inline=True)
             await bot_cmd_channel.send(embed=embed)
 
-
-# Creates a new Role
-        role_name = "🤖-Bot-Admin"
-        role_colour = discord.Color.gold()
-        bot_admin_role_id = read_config(config_dir,"role", "bot_admin_role_id", "int")
-        bot_admin_role = discord.utils.get(guild.roles, id=bot_admin_role_id)
-
-        if bot_admin_role != None:
-            print(f"The role {bot_admin_role.name} already exists.")
-        else:
-            print(f"The role {role_name} does not exist.")
-            bot_admin_role = await guild.create_role(name=role_name, colour=role_colour)
-            print(f"The role {bot_admin_role.name} was created.")
-            write_config(config_dir, "role", "bot_admin_role_id", bot_admin_role.id)
-
-            gif_url = r"https://i.imgur.com/JQapXAt.gif"
-            bot_cmd_channel_id = read_config(config_dir, "channel", "bot_cmd_channel_id", "int")
-            bot_cmd_channel = discord.utils.get(guild.channels, id=bot_cmd_channel)
-            bot_cmd_channel = guild.get_channel(bot_cmd_channel_id)
+            gif_url = r"https://i.imgur.com/F1DWMfO.gif"
 
             text = ""
             list_of_hiden_commands = ["/add_server", "/delt_server"]
@@ -161,6 +179,3 @@ class server_system_setup(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(server_system_setup(bot), guild=discord.Object(guild_id))
-
-
-

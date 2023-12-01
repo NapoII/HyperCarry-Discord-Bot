@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands
 import pyautogui
-token = ""
-SERVER_ID = '1103399447100133386'
+token = "MTE4MDIzODA3NjMzMzc4OTI3NQ.GeKCAh.-tAJEb7WGpnkozQllaeD7sQSpDLnKZkW8C6nwo"
+SERVER_ID = "1103399447100133386"
 
 1173923194235785286
 intents = discord.Intents.default()
@@ -17,7 +17,7 @@ async def on_ready():
     # Den Server mit der angegebenen ID abrufen
     server = bot.get_guild(int(SERVER_ID))
     print("\n")
-    print(f'Erfolgreich zum Server {server.name} verbunden')
+    print(f'Successfully connected to server {server.name}')
     print(f"Server : {server.name}\n")
     print("\n")
     do_it = pyautogui.confirm(text=f'Server : {server.name}', title='Correct server?', buttons=['OK', 'Cancel'])
@@ -48,7 +48,7 @@ async def on_ready():
                     print(f"Failed to delete role {role.name}: {e}")
                     
         else:
-            print(f'Server mit ID {SERVER_ID} nicht gefunden')
+            print(f'Server with ID {SERVER_ID} not found')
     else:
         pass
     print("\n")
