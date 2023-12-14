@@ -1,8 +1,9 @@
 import discord
 from discord.ext import commands
 import pyautogui
-token = "MTE4MDIzODA3NjMzMzc4OTI3NQ.GeKCAh.-tAJEb7WGpnkozQllaeD7sQSpDLnKZkW8C6nwo"
-SERVER_ID = "1103399447100133386"
+token = "MTE4MDI1NzUwODQ2NDU0NTk0NA.GT1Pem.fzK4-5L-vrWN-CQf1Q8_c7iXfigIb1dLlaBa9s"
+application_id = 1180257508464545944
+SERVER_ID = "1179423438700564480"
 
 1173923194235785286
 intents = discord.Intents.default()
@@ -38,8 +39,9 @@ async def on_ready():
 
                 print(f"-->> delt: {channel.name} - #{channel_list[x]}")
 
-
+            
             roles_list = server.roles
+            roles_list_len = len(roles_list)
             for role in roles_list:
                 try:
                     await role.delete()
@@ -51,8 +53,7 @@ async def on_ready():
             print(f'Server with ID {SERVER_ID} not found')
     else:
         pass
-    print("\n")
-    print("Done !")
-    print("\n")
-# Füge deinen Token hier ein
+    
+    print(f"""Done!\nNum of delt channels: {channel_list_len}\nNum of delt Rols: {roles_list_len}""")
+
 bot.run(token)

@@ -1,10 +1,21 @@
 import discord
 
+
+"""
+
+https://embed.dan.onl/
+
+
+"""
+
+
 # Deine Discord-Bot-Token hier einfügen
-TOKEN = "MTE3MjAxNzY1MjY1MTI2NjE0MA.GBv9XO.euJBoXegu5t3j7T9dG_L29wHyGj7K26CYrL5Nw"
+token = "MTEwMzQwNzU1MDkxOTA4NjE1MQ.G2cEZ7.c7nhZNq6lBi_x9zLcH4tAvcsOXc079xY01ui7I"
+
+# rust # token = "MTEwMzQwNzU1MDkxOTA4NjE1MQ.G2cEZ7.c7nhZNq6lBi_x9zLcH4tAvcsOXc079xY01ui7I"
 
 # Deine vorgegebene Channel-ID hier einfügen
-CHANNEL_ID = 695743343841247252
+CHANNEL_ID = 1152263133109424159
 
 website_url = "discord.gg/gGjW9AY"
 
@@ -20,36 +31,25 @@ async def on_ready():
     print(f'Eingeloggt als {client.user.name}')
     channel = client.get_channel(CHANNEL_ID)
 
-    # Erstelle ein Embed
-    embed = discord.Embed(
-        title='Hello HyperCarry Player',
-        description="""🎉Hello <@&1102063023516033114> Gamers! 🎮
 
-🚨 Exciting news!🚨
+    embed = discord.Embed(title="SoundBoard",
+                        description="🔊 Attention Discord Adventurers!\n\n🎉 Exciting news! Our server just became a hub of multimedia delight with the arrival of Rust Soundboard and Stickers, courtesy of @Rust Team! 🤩🎮\n\n🔗 Unleash chaos and camaraderie:\n\n    🚀 Trigger your mates in-game with iconic Rust sounds\n    🎭 Spice up conversations with hilarious stickers\n    🎁 Experience laughter, surprises, and epic moments together",
+                        colour=0xffffff)
 
-Our server will now automatically and instantly reboot in case of a crash.
-
-🔄 No more worries about downtime! 🔄
-
-Have Fun!
-Your HyperCarry Team <3
+    embed.set_image(url="https://i.imgur.com/MAbb5Ca.png")
+    await channel.send(embed=embed)
 
 
-""",
-        color=discord.Color.blue()  # Farbe des Embeds
-    )
 
-    # Set the image URL in the embed
-    image_url = "https://i.imgur.com/n7YoHaF.png"
-    embed.set_image(url=image_url)
 
-    # Add a field with a link
-    website_url = "https://napoii.github.io/Rust-Collection/"
-    embed.add_field(name="HyperCarry Community #1 GunGame [GG]",
-                    value=f"```steam://connect/213.239.210.121:27020```")
-    embed.add_field(name="HyperCarry Community #2 GunGame [GG]",
-                    value=f"```steam://connect/213.239.210.121:27030```")
-    content = "  <@&1102063023516033114>"
-    await channel.send(content = content, embed=embed)
 
-client.run(TOKEN)
+
+
+
+
+
+
+
+
+
+client.run(token)

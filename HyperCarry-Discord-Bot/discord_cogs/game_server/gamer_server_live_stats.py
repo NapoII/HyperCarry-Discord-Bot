@@ -251,7 +251,12 @@ class bot_server_add(commands.Cog):
                     new_server_stats_channel  = await interaction.guild.create_voice_channel(name=channel_name, category=category_servers, overwrites=overwrites)
 
                     print(f"/server_add --> server_data: {full_server_address}, {name}, {new_server_name_channel.id}, { new_server_stats_channel.id}")
-                    add_server_data(json_path_server_channel_data, full_server_address, name, new_server_name_channel.id, new_server_stats_channel.id)
+                    add_server_data(
+                        json_path =  json_path_server_channel_data,
+                        server_address = full_server_address,
+                        server_name = name,
+                        channel_name_id = new_server_name_channel.id,
+                        channel_stats_id = new_server_stats_channel.id)
 
 
 class bot_server_delt(commands.Cog):
@@ -324,7 +329,7 @@ class server_stat_loops(commands.Cog, commands.Bot):
         
         self.myLoop.start(bot)
 
-    @tasks.loop(seconds=160)  # repeat after every 10 seconds #240
+    @tasks.loop(seconds=180)  # repeat after every 10 seconds #240
     async def myLoop(self, bot):
         await self.bot.wait_until_ready()
         guild = self.bot.get_guild(guild_id)
@@ -352,7 +357,9 @@ class server_stat_loops(commands.Cog, commands.Bot):
         data = read_json_file(json_path_server_channel_data)
 
         full_serverlist_text = ""
-
+        sum_of_bots = 0
+        sum_of_players = 0
+        sum_of_max = 0
         for key in data:
             
             server_address = data[key]["server_address"]
@@ -405,6 +412,9 @@ class server_stat_loops(commands.Cog, commands.Bot):
                 dedicated = server_data["response"]["servers"][0]["dedicated"]
                 map = server_data["response"]["servers"][0]["map"]
                 dc_timestemp = discord_time_convert(time.time())
+                sum_of_bots = sum_of_bots + bots
+                sum_of_players = sum_of_players + players
+                sum_of_max = sum_of_max + max_players
 
                 channel_name_text = f"👥({players}/{max_players}) 🤖({bots})"
                 await channel_stats.edit(name = channel_name_text)
@@ -433,12 +443,20 @@ class server_stat_loops(commands.Cog, commands.Bot):
             server_stats_list_msg = await all_game_servers_channel.send(embed=embed)
             write_config(config_dir, "msg", "server_stats_list_msg_id", server_stats_list_msg.id)
 
+
+        full_serverlist_text_final = f"Sum of all Servers:\n```👥({sum_of_players}/{sum_of_max}) 🤖({sum_of_bots})```\n{full_serverlist_text}"
+
         dc_timecode = discord_time_convert(time.time())
         embed = discord.Embed(title="HyperCarry server list",
-                      description=f"{full_serverlist_text}\nupdate {dc_timecode}",
+                      description=f"{full_serverlist_text_final}\nupdate {dc_timecode}",
                       colour=0xb97a3c)
         await server_stats_list_msg.edit(embed=embed)
 
+        status_text = f"👥({sum_of_players}/{sum_of_max}) 🤖({sum_of_bots})"
+        await asyncio.sleep(20)
+        await self.bot.change_presence(activity=discord.Game(status_text))
+        print(f"Discord Bot status update: {status_text}")
+        
 
 # Confirm buttons
 class Confirm_say(discord.ui.View):

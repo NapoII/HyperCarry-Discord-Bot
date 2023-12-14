@@ -73,9 +73,9 @@ class server_system_setup(commands.Cog):
 
 # Creates a new category
         category_name = "--------💻 - Admin - 💻--------"
-        category_adminl_id = read_config(config_dir,"channel", "open_a_ticket_channel_id", "int")
-        category_admin = discord.utils.get(guild.text_channels, id=category_adminl_id)
-
+        category_adminl_id = read_config(config_dir,"category", "category_admin_id", "int")
+        category_admin = discord.utils.get(guild.categories, id=category_adminl_id)
+        
         if category_admin != None:
             print(f"The category {category_admin.name} already exists.")
 
@@ -143,7 +143,7 @@ class server_system_setup(commands.Cog):
             gif_url = r"https://i.imgur.com/F1DWMfO.gif"
 
             text = ""
-            list_of_hiden_commands = ["/add_server", "/delt_server"]
+            list_of_hiden_commands = ["/add_server", "/delt_server","/send_embed"]
             for hide_command in list_of_hiden_commands:
                 text = text + f" - `{hide_command}`\n"
 

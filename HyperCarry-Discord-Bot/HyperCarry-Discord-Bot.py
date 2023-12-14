@@ -52,7 +52,6 @@ while True:
 
 # channel
 bot_cmd_channel_id = read_config(config_dir, "channel", "bot_cmd_channel_id", "int")
-delt_msg_channel_id = read_config(config_dir, "channel", "delt_msg_channel_id", "int")
 
 
 ################################################################################################################################
@@ -65,14 +64,16 @@ class MyBot(commands.Bot):
             application_id=Application_ID,
             activity=activity
         )
-        #"discord_cogs.game_server.gamer_server_live_stats"
+
         self.initial_extensions = [
             "discord_cogs.admin.pre_setup",
+            "discord_cogs.admin.say",
             "discord_cogs.admin.auto_msg",
             "discord_cogs.ticket_system.ticket_system",
             "discord_cogs.channel_hopper.channel_hopper",
             "discord_cogs.pick_a_role.pick_a_role",
-            
+            "discord_cogs.game_server.gamer_server_live_stats"
+        
         ]
 
     async def setup_hook(self):
@@ -85,9 +86,8 @@ class MyBot(commands.Bot):
     async def on_ready(self):
         guild = self.get_guild(guild_id)  # Access guild from the class attribute
         text = f"\n\nThe Bot: [ {self.user} | ID:{self.user.id} ] is connected to [{guild.name}] id: [{guild.id}]\nActivity_text:[{activity_text}]\n\n📶 Bot is Online and Rdy to Run... 📶 \n"
-        print(text)
-        text_len = len(text)
-        print(text_len*"-")
+        
+        print(f"{text}\n########################################")
 
         print(f'Logged in as {self.user} (ID: {self.user.id})')
 
@@ -119,4 +119,5 @@ class MyBot(commands.Bot):
                 await bot_cmd_channel.send(embed=embed)
 
 bot = MyBot()
+
 bot.run(Discord_token)

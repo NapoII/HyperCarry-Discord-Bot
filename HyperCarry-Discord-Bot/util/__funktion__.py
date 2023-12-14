@@ -106,7 +106,7 @@ Example Usage:
         return load_config
 
 
-def write_config(config_dir, section, Key, option):
+def write_config(config_dir, section, Key, option=None):
     """
 Args:
     - config_dir (str): The directory where the configuration file is located.
@@ -602,7 +602,7 @@ def find_user_id_occurrences(data_set, target_user_id):
     return matching_keys
 
 
-def add_new_ticket_data(json_path, key, type, user_name, user_id, ticket_channel_id, ticket_role_id, time_stemp, ticket_status):
+def add_new_ticket_data(json_path, key, type, user_name, user_id, ticket_channel_id, ticket_role_id, time_stemp, ticket_action_id, ticket_status):
     # Load existing data from the JSON file
     with open(json_path, 'r') as file:
         data = json.load(file)
@@ -620,6 +620,7 @@ def add_new_ticket_data(json_path, key, type, user_name, user_id, ticket_channel
             "voice_channel_id": "",
             "ticket_role_id": ticket_role_id,
             "unix_timestemp": time_stemp,
+            "ticket_action_id" : ticket_action_id,
             "ticket_status": ticket_status
         }
 
@@ -716,11 +717,11 @@ def support_dashboard_text(json_path_ticket, interaction_guild_members, aktiv_su
         discord_time = discord_time_convert(unix_timestemp)
         open_ticket_str = open_ticket_str + f"> **{ticket_status}** **-** <#{ticket_channel_id}> **-** <@{user_id}> **-** **{type}** **-** {discord_time}\n\n"
 
-    text = f"""**Support Check In**
-    _Check In as active and receive notifications for open tickets._
+    text = f"""> **Support Check In**
+    > _Check In as active and receive notifications for open tickets._
     
-    **Support Check Out**
-    _Check Out as active and do not receive notifications for open tickets._
+    > **Support Check Out**
+    > _Check Out as active and do not receive notifications for open tickets._
     
     **Aktive  Supporter:**
     {aktive_supporter_str}
@@ -736,10 +737,20 @@ def support_dashboard_text(json_path_ticket, interaction_guild_members, aktiv_su
 
 
 def find_key_by_user_id(json_data, target_user_id):
+    has_open_entry = False  # Flag, um zu überprüfen, ob es offene Einträge gibt
+
     for key, value in json_data.items():
         if "user_id" in value and value["user_id"] == target_user_id:
-            return key
-    return None
+            if value.get("ticket_status") != "close":
+                return key  # Rückgabe des Schlüssels, wenn der Status nicht "close" ist
+            else:
+                has_open_entry = True  # Setzen des Flags, wenn ein geschlossener Eintrag gefunden wurde
+
+    if has_open_entry:
+        return False  # Rückgabe von False, wenn alle Einträge "close" sind, aber es mindestens einen Eintrag gibt
+    else:
+        return None  # Rückgabe von None, wenn es keine Einträge für den gegebenen target_user_id gibt
+
 
 
 def is_user_id_in_data(json_data, target_user_id):
@@ -836,7 +847,7 @@ def get_server_data(api_key, filter_param):
         return None
     
 
-def add_server_data(json_path, server_address, server_name, channel_name_id, channel_stats_id, server_msg_id):
+def add_server_data(json_path, server_address, server_name, channel_name_id, channel_stats_id):
     # Read the existing JSON data
     with open(json_path, 'r') as file:
         data = json.load(file)
@@ -894,3 +905,159 @@ def delete_entry(json_path, key):
 
     else:
         print(f"Entry with the key '{key}' was not found.")
+
+
+def create_and_fill_temp_bridge(toFill, dir):
+    """Create and fill a temporary file with the provided content.
+
+Args:
+- toFill (str): The string content to be written to the temporary file.
+- dir (str): The path and name of the file to be created.
+
+Returns:
+- str: The same string content that was written to the file.
+
+Example Usage:
+>>> create_and_fill_temp_bridge("This is some content.", "temp_file.txt")
+'This is some content.'
+"""
+    file1 = open(
+        dir, "a", encoding="utf-8")
+    print(f"Temp_Datei [{dir}] is described and saved...\n")
+    file1.write(str(toFill))
+    file1.close()
+    return dir
+
+
+def read_and_delt_temp_bridge(dir):
+    """Args:
+- dir (str): The directory of the temporary file to read and delete.
+
+Returns:
+- content (str): The content of the temporary file.
+
+This function reads the content of the temporary file located at `dir`, deletes the file, and returns the content as a string.
+
+Example Usage:
+>>> temp_file_content = read_and_delt_temp_bridge("path/to/temp_file.txt")
+"""
+    file1 = open(dir, "r", encoding="utf-8")
+    context = (file1.read())
+    print(f"File [{dir}] is opened ...\n")
+    file1.close()
+    try:
+        os.remove(dir)
+    except OSError as e:
+        print(e)
+    else:
+        print(f"Temp_Datei [{dir}] was deleted...\n")
+    return context
+
+
+def File_name_with_time(FileName):
+    """Generate a filename with a timestamp.
+
+    Args:
+    - FileName (str): The name of the file.
+
+    Returns:
+    - FullName (str): The full name of the file with a timestamp in the format of "FileName-DD_MM_YYYY-HH.MM".
+
+    Example usage:
+    >>> Datei_name_mit_Zeit("report")
+    'report-04_04_2023-15.30'
+    """
+    Date = Date_Time=(time.strftime("%d_%m-%Y-%H.%M"))        # Generates date formater
+    FullName = (FileName+"-"+(Date))                           # Generates file name
+    return FullName
+
+
+def update_ticket_json_values(json_path, key, ticket_channel_id, ticket_role_id, ticket_status):
+    # Read the JSON file
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    data[key]["ticket_channel_id"] = ticket_channel_id
+    data[key]["ticket_role_id"] = ticket_role_id
+    data[key]["ticket_status"] = ticket_status
+    data[key]["unix_timestemp"] = time.time()
+    
+    # Write the updated data back to the JSON file
+    with open(json_path, 'w') as file:
+        json.dump(data, file, indent=2)
+
+
+def delete_dm_tickets_data(json_dir, user_id):
+    with open(json_dir, 'r') as file:
+        data = json.load(file)
+    entries_to_delete = []
+    for entry_id, entry_data in data.items():
+        if entry_data["user_id"] == user_id and entry_data["ticket_status"] == "dm-queue":
+            entries_to_delete.append(entry_id)
+
+    for entry_id in entries_to_delete:
+        del data[entry_id]
+
+    with open(json_dir, 'w') as file:
+        json.dump(data, file, indent=2)
+
+
+def new_ticket_action_id(file_path):
+    try:
+        # Try to open the file and read the current value
+        with open(file_path, 'r') as file:
+            current_value = int(file.read().strip())
+        
+        # Calculate the new value (current value + 1)
+        new_value = current_value + 1
+        
+        # Write the new value to the file
+        with open(file_path, 'w') as file:
+            file.write(str(new_value))
+        
+        # Return the new value
+        return new_value
+    
+    except FileNotFoundError:
+        # If the file is not found, create a new file with value 0
+        with open(file_path, 'w') as file:
+            file.write('0')
+        
+        # Return the value 0
+        return 0
+    except Exception as e:
+        # If any other error occurs, display the error
+        print(f"Error: {e}")
+        return None
+    
+
+def check_ticket_action_id(json_path, ticket_action_id):
+    try:
+        with open(json_path, 'r') as file:
+            data = json.load(file)
+            for key, value in data.items():
+                if "ticket_action_id" in value and value["ticket_action_id"] == ticket_action_id:
+                    return True
+            return False
+    except (FileNotFoundError, json.JSONDecodeError):
+        return False
+    
+
+def get_ticket_channel_id_if_dm_support(json_dir, user_id):
+    try:
+        with open(json_dir, 'r') as file:
+            data = json.load(file)
+
+            ticket_channel_ids = []
+            for key, value in data.items():
+                if "user_id" in value and value["user_id"] == user_id:
+                    if "ticket_status" in value and value["ticket_status"] == "dm-queue":
+                        ticket_channel_ids.append(value.get("ticket_channel_id", None))
+
+            # Remove possible None values and duplicate entries
+            ticket_channel_ids = list(filter(None, ticket_channel_ids))
+            ticket_channel_ids = list(set(ticket_channel_ids))
+
+            return ticket_channel_ids if ticket_channel_ids else False
+    except (FileNotFoundError, json.JSONDecodeError):
+        return False

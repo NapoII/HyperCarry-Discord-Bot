@@ -205,7 +205,8 @@ class auto_bot_msg(commands.Cog):
     "elect",
     "cast your vote",
     "polling",
-    "balloting"
+    "balloting",
+    "meinung"
 ]
         
         if any(word.lower() in words_in_message for word in trigger_words):
@@ -278,6 +279,7 @@ class auto_bot_msg(commands.Cog):
 
 
         trigger_words = [
+    "spast"
     "scheiße",
     "mist",
     "uncool",
@@ -299,6 +301,7 @@ class auto_bot_msg(commands.Cog):
 
 
         trigger_words = [
+    "hey",
     "hi",
     "hello",
     "moin",
@@ -311,7 +314,22 @@ class auto_bot_msg(commands.Cog):
             else:
                 print(f"auto_msg --> user: {message.author.name} channel: DM\nsend:👋 msg:\n {message.content}\n")
 
+            
             await message.add_reaction("👋")
+
+
+        trigger_words = [
+    "gta",
+    "gta6",
+    ]
+        if any(word.lower() in words_in_message for word in trigger_words):
+            if isinstance(message.channel, discord.TextChannel):
+                print(f"auto_msg --> user: {message.author.name} channel: {message.channel.name}\nsend:🌴 msg:\n {message.content}\n")
+            else:
+                print(f"auto_msg --> user: {message.author.name} channel: DM\nsend:🌴 msg:\n {message.content}\n")
+
+            
+            await message.add_reaction("🌴")
 
 
 async def setup(bot: commands.Bot): 

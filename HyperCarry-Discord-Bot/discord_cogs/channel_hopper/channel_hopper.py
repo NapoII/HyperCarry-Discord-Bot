@@ -135,7 +135,7 @@ class channelHoper(commands.Cog):
 
         guild = user.guild
         user_id = user.id
-        user_name = user.name
+        user_name = user.display_name
         if is_user_in(user_id, json_path) == True:
 
             channel_id = get_channel_id_from(user_id, json_path)
@@ -156,7 +156,7 @@ class channelHoper(commands.Cog):
             #if user.id not in self.voice_channels.values:
             # random_pic = random.choice(channel_name_list)
 
-            new_channel = await category.create_voice_channel(f"🔊  {user_name}´s VC")
+            new_channel = await category.create_voice_channel(f"🔊-{user_name}´s VC")
             new_channel_id = new_channel.id
 
             add_new_channel_data(user_name, user_id, new_channel_id, json_path)

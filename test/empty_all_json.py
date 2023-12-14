@@ -8,7 +8,11 @@ def overwrite_json(file_path):
 
 def main():
     # List of JSON file paths
-    json_files = []
+    json_files = [r'E:\Pr0grame\My_ Pyhton\work_in_progress\HyperCarry-Discord-Bot\HyperCarry-Discord-Bot\discord_cogs\ticket_system\support_team_data.json',
+                  r'E:\Pr0grame\My_ Pyhton\work_in_progress\HyperCarry-Discord-Bot\HyperCarry-Discord-Bot\discord_cogs\game_server\server_channel_data.json',
+                  r'E:\Pr0grame\My_ Pyhton\work_in_progress\HyperCarry-Discord-Bot\HyperCarry-Discord-Bot\discord_cogs\ticket_system\support_team_data.json',
+                  r'E:\Pr0grame\My_ Pyhton\work_in_progress\HyperCarry-Discord-Bot\HyperCarry-Discord-Bot\discord_cogs\game_server\server_channel_data.json'
+                  ]
 
     for file_path in json_files:
         if os.path.exists(file_path):
